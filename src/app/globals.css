@@ -3,23 +3,27 @@
 @tailwind utilities;
 
 :root {
-  --primary: #0284c7;
-  --primary-light: #f0f9ff;
-  --primary-text: #0284c7;
-  --bg: #f0f9ff;
+  --primary: #00abe4;
+  --primary-hover: #2373ff;
+  --primary-light: #e8f6fe;
+  --primary-text: #00abe4;
+  --bg: #f8faff;
   --bg-card: #ffffff;
-  --bg-input: #f8fafc;
-  --bg-own: #0284c7;
+  --bg-input: #f8faff;
+  --bg-own: #00abe4;
   --bg-other: #ffffff;
-  --text: #1e2939;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text: #1e375a;
+  --text-secondary: rgba(30, 55, 90, 0.7);
+  --text-muted: rgba(30, 55, 90, 0.35);
   --text-white: #ffffff;
-  --border: #b8e6fe;
+  --border: rgba(30, 55, 90, 0.1);
+  --shadow-sm: 0 2px 8px 0 rgba(35, 100, 210, 0.08);
+  --shadow-md: 0 20px 40px 0 rgba(35, 100, 210, 0.12);
+  --shadow-lg: 0 30px 60px 0 rgba(170, 195, 225, 0.3);
 }
 
 body {
-  background: linear-gradient(to bottom, #f0f9ff, #ffffff);
+  background: #ffffff;
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
   font-size: 17px;
@@ -30,7 +34,7 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #d0d8e6; border-radius: 2px; }
 
 /* Animation */
 @keyframes slideIn {
@@ -39,4 +43,13 @@ body {
 }
 .message-enter {
   animation: slideIn 0.25s ease-out;
+}
+
+/* TTS button */
+.tts-btn {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.message-group:hover .tts-btn {
+  opacity: 1;
 }

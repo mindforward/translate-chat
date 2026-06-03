@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Message } from '@/lib/supabase';
@@ -26,6 +26,7 @@ export default function ChatRoom() {
   const [language, setLanguage] = useState('');
   const [otherNicknames, setOtherNicknames] = useState<string[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [speakingId, setSpeakingId] = useState<number | null>(null);
 
   useEffect(() => {
     const st = sessionStorage.getItem('session_token');
@@ -168,81 +169,148 @@ export default function ChatRoom() {
 
   const isMyMessage = (msg: Message) => msg.nickname === nickname;
 
-  return (
-    <div className="h-dvh flex flex-col max-w-[780px] mx-auto bg-white border-x border-sky-200">
+  const speakText = useCallback((text: string, langCode: string, msgId: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Map language codes to BCP 47 tags
+    const langMap: Record<string, string> = {
+      yue: 'zh-HK',
+      zh: 'zh-CN',
+      en: 'en-US',
+      ja: 'ja-JP',
+      ko: 'ko-KR',
+      vi: 'vi-VN',
+    };
+    utterance.lang = langMap[langCode] || 'en-US';
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    setSpeakingId(msgId);
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  return (
+    <div className="h-dvh flex flex-col max-w-[780px] mx-auto bg-white">
       {/* Header */}
-      <header className="px-5 py-4 border-b border-sky-200 flex items-center justify-between shrink-0 bg-white">
-        <div className="flex items-center gap-3 min-w-0">
-          <button onClick={() => router.push('/')}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-sky-50 text-[20px] text-gray-500 shrink-0 transition-colors">
-            ←
-          </button>
-          <div className="min-w-0">
-            <h1 className="font-bold text-[20px] text-gray-800 truncate">聊天室 {roomId}</h1>
-            <p className="text-sm text-gray-400 truncate">
-              {otherNicknames.length > 0 ? otherNicknames.join('、') : '等待其他人加入...'}
-            </p>
+      <header className="px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => router.push('/')}
+              className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-50 text-[20px] shrink-0 transition-colors"
+              style={{ color: 'var(--text-secondary)' }}>
+              ←
+            </button>
+            <div className="min-w-0">
+              <h1 className="font-bold text-[20px]" style={{ color: 'var(--text)' }}>聊天室 {roomId}</h1>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                {otherNicknames.length > 0 ? otherNicknames.join('、') : '等待其他人加入...'}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs px-3 py-1.5 bg-sky-50 text-sky-600 rounded-full font-semibold">
-            {getLanguageName(language)}
-          </span>
-          <button onClick={() => setShowClearConfirm(true)}
-            className="text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-full font-semibold hover:bg-red-100 transition-colors">
-            清除
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs px-3 py-1.5 rounded-full font-semibold"
+              style={{
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
+              }}>
+              {getLanguageName(language)}
+            </span>
+            <button onClick={() => setShowClearConfirm(true)}
+              className="text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors"
+              style={{ color: 'var(--text-muted)' }}>
+              清除
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3 bg-gradient-to-b from-sky-50 to-white">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-2"
+        style={{ backgroundColor: 'var(--bg)' }}>
         {messages.length === 0 && (
           <div className="text-center mt-24">
             <p className="text-6xl mb-4">💬</p>
-            <p className="text-gray-600 font-semibold text-[18px]">未有對話記錄</p>
-            <p className="text-[15px] text-gray-400 mt-2">發送第一條訊息開始對話吧！</p>
+            <p className="font-semibold text-[18px]" style={{ color: 'var(--text)' }}>未有對話記錄</p>
+            <p className="text-[15px] mt-2" style={{ color: 'var(--text-muted)' }}>發送第一條訊息開始對話吧！</p>
           </div>
         )}
-        {messages.map((msg) => (
-          <div key={msg.id}
-            className={`message-enter flex ${isMyMessage(msg) ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-2xl px-5 py-4 ${
-              isMyMessage(msg)
-                ? 'bg-sky-600 rounded-br-sm'
-                : 'bg-white border-2 border-sky-200 rounded-bl-sm shadow-sm'
-            }`}>
-              <p className={`text-sm font-semibold mb-1.5 ${
-                isMyMessage(msg) ? 'text-sky-100' : 'text-gray-500'
-              }`}>
-                {msg.nickname}
-                {msg.translated_lang && msg.translated_lang !== msg.original_lang && (
-                  <span className="ml-1.5 opacity-60 text-xs">
-                    {getLanguageName(msg.translated_lang)}
-                  </span>
-                )}
-              </p>
-              <p className={`text-[18px] sm:text-[19px] leading-relaxed whitespace-pre-wrap break-words font-medium ${
-                isMyMessage(msg) ? 'text-white' : 'text-gray-800'
-              }`}>
-                {displayText(msg)}
-              </p>
-              <p className={`text-xs mt-1.5 text-right ${
-                isMyMessage(msg) ? 'text-sky-100/70' : 'text-gray-400'
-              }`}>
-                {new Date(msg.created_at).toLocaleTimeString('zh-HK', {
-                  hour: '2-digit', minute: '2-digit',
-                })}
-              </p>
+        {messages.map((msg) => {
+          const display = displayText(msg);
+          const isMine = isMyMessage(msg);
+          const isSpeaking = speakingId === msg.id;
+
+          return (
+            <div key={msg.id}
+              className="message-enter flex flex-col message-group">
+              <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
+                <div className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] px-5 py-3.5 ${
+                  isMine
+                    ? 'rounded-lg rounded-br-sm'
+                    : 'rounded-lg rounded-bl-sm'
+                }`}
+                  style={{
+                    backgroundColor: isMine ? 'var(--bg-own)' : 'var(--bg-other)',
+                    boxShadow: isMine
+                      ? '0 8px 20px 0 rgba(0, 171, 228, 0.2)'
+                      : '0 2px 8px 0 rgba(35, 100, 210, 0.08)',
+                    border: isMine ? 'none' : '1px solid var(--border)',
+                  }}>
+                  <p className={`text-sm font-semibold mb-1 ${
+                    isMine ? 'text-white/70' : ''
+                  }`} style={!isMine ? { color: 'var(--text-muted)' } : {}}>
+                    {msg.nickname}
+                    {msg.translated_lang && msg.translated_lang !== msg.original_lang && (
+                      <span className="ml-1.5 opacity-60 text-xs">
+                        {getLanguageName(msg.translated_lang)}
+                      </span>
+                    )}
+                  </p>
+
+                  <p className={`text-[18px] sm:text-[19px] leading-relaxed whitespace-pre-wrap break-words font-medium ${
+                    isMine ? 'text-white' : ''
+                  }`} style={!isMine ? { color: 'var(--text)' } : {}}>
+                    {display}
+                  </p>
+
+                  <div className={`flex items-center justify-between mt-1.5`}>
+                    <button
+                      onClick={() => speakText(display, msg.original_lang, msg.id)}
+                      className="tts-btn w-7 h-7 flex items-center justify-center rounded-md transition-colors text-sm"
+                      style={{
+                        color: '#1e375a',
+                        opacity: isSpeaking ? 1 : undefined,
+                      }}
+                      title="發音"
+                    >
+                      {isSpeaking ? '🔊' : '🔈'}
+                    </button>
+                    <p className={`text-xs ${isMine ? 'text-white/50' : ''}`}
+                      style={!isMine ? { color: 'var(--text-muted)' } : {}}>
+                      {new Date(msg.created_at).toLocaleTimeString('zh-HK', {
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="px-4 sm:px-6 py-3.5 border-t border-sky-200 bg-white shrink-0">
+      <div className="px-4 sm:px-6 py-3.5 border-t shrink-0 bg-white" style={{ borderColor: 'var(--border)' }}>
         <div className="flex gap-2 items-center">
           <textarea ref={inputRef}
             value={inputText}
@@ -254,32 +322,44 @@ export default function ChatRoom() {
             onKeyDown={handleKeyDown}
             placeholder={`輸入訊息 (${getLanguageName(language)})...`}
             rows={1}
-            className="flex-1 px-5 py-3.5 bg-gray-50 border-2 border-sky-200 rounded-2xl text-gray-800 text-[17px] placeholder:text-gray-400 focus:outline-none focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-200 resize-none max-h-[150px] transition-all"
+            className="flex-1 px-5 py-3.5 rounded-lg text-[17px] placeholder: resize-none max-h-[150px] transition-all"
+            style={{
+              backgroundColor: 'var(--bg-input)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
+            }}
           />
           <button onClick={sendMessage}
             disabled={!inputText.trim() || sending}
-            className="px-7 py-3.5 bg-sky-600 hover:bg-sky-700 disabled:opacity-30 rounded-2xl font-bold text-white text-[17px] transition-all shrink-0 shadow-sm">
+            className="px-7 py-3.5 rounded-lg font-bold text-white text-[17px] transition-all shrink-0 disabled:opacity-30"
+            style={{
+              backgroundColor: 'var(--primary)',
+              boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
+            }}>
             {sending ? '...' : '發送 →'}
           </button>
         </div>
-        <p className="mt-1.5 text-xs text-gray-400 text-center">
+        <p className="mt-1.5 text-xs text-center" style={{ color: 'var(--text-muted)' }}>
           ⏎ Enter 發送 · ⇧ Shift+Enter 換行
         </p>
       </div>
 
       {/* Clear modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl border-2 border-sky-200">
-            <h3 className="text-[18px] font-bold text-gray-800 mb-3">清除對話記錄？</h3>
-            <p className="text-[15px] text-gray-500 mb-5">無法復原。</p>
+        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg"
+            style={{ boxShadow: '0 30px 60px 0 rgba(170, 195, 225, 0.3)' }}>
+            <h3 className="text-[18px] font-bold mb-3" style={{ color: 'var(--text)' }}>清除對話記錄？</h3>
+            <p className="text-[15px] mb-5" style={{ color: 'var(--text-secondary)' }}>無法復原。</p>
             <div className="flex gap-3">
               <button onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-3 bg-gray-100 rounded-xl text-[15px] font-semibold text-gray-600 hover:bg-gray-200 transition-colors">
+                className="flex-1 py-3 rounded-lg text-[15px] font-semibold transition-colors"
+                style={{ backgroundColor: 'var(--bg)', color: 'var(--text-secondary)' }}>
                 取消
               </button>
               <button onClick={clearMessages}
-                className="flex-1 py-3 bg-red-500 rounded-xl text-[15px] font-bold text-white hover:bg-red-600 transition-colors">
+                className="flex-1 py-3 rounded-lg text-[15px] font-bold text-white transition-colors"
+                style={{ backgroundColor: '#e74c3c' }}>
                 確認清除
               </button>
             </div>

@@ -52,45 +52,49 @@ export default function InvitePage() {
     verifying: {
       icon: '⏳',
       title: '驗證 Invite Link...',
-      color: 'text-sky-500',
+      color: '#00abe4',
     },
     expired: {
       icon: '⏰',
       title: 'Invite Link 已過期',
       desc: '15 分鐘有效期限已過，請向管理員獲取新嘅 Invite Link',
-      color: 'text-red-500',
+      color: '#e74c3c',
     },
     used: {
       icon: '✅',
       title: 'Invite Link 已經使用過',
       desc: '每個 Invite Link 只能使用一次',
-      color: 'text-amber-500',
+      color: '#f39c12',
     },
     invalid: {
       icon: '❌',
       title: 'Invite Link 無效',
       desc: '請檢查連結是否正確，或向管理員獲取新嘅 Invite Link',
-      color: 'text-red-500',
+      color: '#e74c3c',
     },
   };
 
   const cfg = statusConfig[status];
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-4">
+    <div className="min-h-dvh flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="text-center">
         <div className="text-6xl mb-6">{cfg.icon}</div>
-        <h1 className={`text-[22px] font-bold mb-3 ${cfg.color}`}>{cfg.title}</h1>
+        <h1 className="text-[22px] font-bold mb-3" style={{ color: cfg.color }}>{cfg.title}</h1>
         {'desc' in cfg && (
-          <p className="text-gray-500 text-[15px] max-w-sm">{cfg.desc}</p>
+          <p className="text-[15px] max-w-sm" style={{ color: 'var(--text-secondary)' }}>{cfg.desc}</p>
         )}
         {status === 'verifying' && (
-          <div className="mt-6 animate-pulse text-gray-400 text-[15px]">驗證中...</div>
+          <div className="mt-6 animate-pulse text-[15px]" style={{ color: 'var(--text-muted)' }}>驗證中...</div>
         )}
         {status !== 'verifying' && (
           <button
             onClick={() => router.push('/')}
-            className="mt-6 px-6 py-3 bg-sky-600 hover:bg-sky-700 rounded-2xl font-bold text-white text-[15px] transition-all shadow-sm"
+            className="mt-6 px-6 py-3 rounded-lg font-bold text-white text-[15px] transition-all"
+            style={{
+              backgroundColor: 'var(--primary)',
+              boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
+            }}
           >
             返回首頁
           </button>
