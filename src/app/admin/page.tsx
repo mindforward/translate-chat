@@ -60,9 +60,9 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold mb-2">⚙️ Admin Panel</h1>
             <p className="text-[var(--text-muted)]">請輸入管理員密碼</p>
           </div>
-          <form onSubmit={handleLogin} className="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border)]">
+          <form onSubmit={handleLogin} className="bg-white rounded-2xl p-6 border border-[var(--border)] shadow-sm">
             {pwError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+              <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-[14px]">
                 {pwError}
               </div>
             )}
@@ -71,12 +71,12 @@ export default function AdminPage() {
               value={adminPw}
               onChange={(e) => setAdminPw(e.target.value)}
               placeholder="Admin Password"
-              className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] mb-4"
+              className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[15px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary-light)] mb-4"
               autoFocus
             />
             <button
               type="submit"
-              className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] rounded-xl font-semibold transition-colors"
+              className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-xl font-medium text-white text-[15px] transition-colors"
             >
               進入
             </button>
