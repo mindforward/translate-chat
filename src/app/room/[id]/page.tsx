@@ -356,6 +356,7 @@ export default function ChatRoom() {
           ⏎ Enter 發送 · ⇧ Shift+Enter 換行
         </p>
       </div>
+    </div>
 
       {/* Clear modal - lightbox */}
       {showClearConfirm && (
@@ -383,7 +384,6 @@ export default function ChatRoom() {
           </div>
         </div>
       )}
-    </div>
     </>
   );
 }
