@@ -3,23 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --primary: #4338ca;
-  --primary-light: #eef2ff;
-  --primary-text: #4338ca;
-  --bg: #f1f5f9;
+  --primary: #0284c7;
+  --primary-light: #f0f9ff;
+  --primary-text: #0284c7;
+  --bg: #f0f9ff;
   --bg-card: #ffffff;
   --bg-input: #f8fafc;
-  --bg-own: #4338ca;
+  --bg-own: #0284c7;
   --bg-other: #ffffff;
-  --text: #0f172a;
-  --text-secondary: #334155;
+  --text: #1e2939;
+  --text-secondary: #475569;
   --text-muted: #94a3b8;
   --text-white: #ffffff;
-  --border: #e2e8f0;
+  --border: #b8e6fe;
 }
 
 body {
-  background: var(--bg);
+  background: linear-gradient(to bottom, #f0f9ff, #ffffff);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
   font-size: 17px;
