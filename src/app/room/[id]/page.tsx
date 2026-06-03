@@ -169,15 +169,21 @@ export default function ChatRoom() {
 
   const isMyMessage = (msg: Message) => msg.nickname === nickname;
 
+  /** Determine which language to speak based on what text is shown */
+  const speechLangFor = useCallback((msg: Message): string => {
+    if (msg.original_lang !== language && msg.translated_lang === language) {
+      return language; // showing translated text → speak in user's language
+    }
+    return msg.original_lang; // showing original text → speak in original language
+  }, [language]);
+
   const speakText = useCallback((text: string, langCode: string, msgId: number) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
 
-    // Map language codes to BCP 47 tags
     const langMap: Record<string, string> = {
       yue: 'zh-HK',
       zh: 'zh-CN',
@@ -201,38 +207,44 @@ export default function ChatRoom() {
 
   return (
     <div className="h-dvh flex flex-col max-w-[780px] mx-auto bg-white">
-      {/* Header */}
-      <header className="px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <button onClick={() => router.push('/')}
-              className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-50 text-[20px] shrink-0 transition-colors"
-              style={{ color: 'var(--text-secondary)' }}>
-              ←
-            </button>
-            <div className="min-w-0">
-              <h1 className="font-bold text-[20px]" style={{ color: 'var(--text)' }}>聊天室 {roomId}</h1>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                {otherNicknames.length > 0 ? otherNicknames.join('、') : '等待其他人加入...'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs px-3 py-1.5 rounded-full font-semibold"
-              style={{
-                backgroundColor: 'var(--primary-light)',
-                color: 'var(--primary)',
-              }}>
-              {getLanguageName(language)}
-            </span>
-            <button onClick={() => setShowClearConfirm(true)}
-              className="text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors"
-              style={{ color: 'var(--text-muted)' }}>
-              清除
-            </button>
+      {/* Header — single row: ← back + room title | lang + clear */}
+      <header className="px-4 py-3 border-b flex items-center justify-between shrink-0"
+        style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => router.push('/')}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-[18px] shrink-0 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}>
+            ←
+          </button>
+          <div className="min-w-0">
+            <h1 className="font-bold truncate" style={{ fontSize: '18px', color: 'var(--text)' }}>
+              聊天室 {roomId}
+            </h1>
           </div>
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap"
+            style={{
+              backgroundColor: 'var(--primary-light)',
+              color: 'var(--primary)',
+            }}>
+            {getLanguageName(language)}
+          </span>
+          <button onClick={() => setShowClearConfirm(true)}
+            className="text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
+            style={{ color: 'var(--text-muted)' }}>
+            清除
+          </button>
+        </div>
       </header>
+
+      {/* Participants bar */}
+      <div className="px-4 py-2 text-xs border-b text-center"
+        style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
+        {otherNicknames.length > 0
+          ? `在線：${[nickname, ...otherNicknames].join('、')}`
+          : '等待其他人加入...'}
+      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-2"
@@ -251,23 +263,22 @@ export default function ChatRoom() {
 
           return (
             <div key={msg.id}
-              className="message-enter flex flex-col message-group">
+              className="message-enter message-group">
               <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
-                <div className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] px-5 py-3.5 ${
-                  isMine
-                    ? 'rounded-lg rounded-br-sm'
-                    : 'rounded-lg rounded-bl-sm'
-                }`}
+                <div
+                  className="max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-xl"
                   style={{
-                    backgroundColor: isMine ? 'var(--bg-own)' : 'var(--bg-other)',
+                    padding: '10px',
+                    backgroundColor: isMine ? '#f0f4ff' : 'var(--bg-other)',
                     boxShadow: isMine
-                      ? '0 8px 20px 0 rgba(0, 171, 228, 0.2)'
+                      ? '0 2px 8px 0 rgba(35, 100, 210, 0.08)'
                       : '0 2px 8px 0 rgba(35, 100, 210, 0.08)',
-                    border: isMine ? 'none' : '1px solid var(--border)',
+                    border: isMine
+                      ? '1px solid #d0e0ff'
+                      : '1px solid var(--border)',
                   }}>
-                  <p className={`text-sm font-semibold mb-1 ${
-                    isMine ? 'text-white/70' : ''
-                  }`} style={!isMine ? { color: 'var(--text-muted)' } : {}}>
+                  <p className="text-sm font-semibold mb-1"
+                    style={{ color: 'var(--text-muted)' }}>
                     {msg.nickname}
                     {msg.translated_lang && msg.translated_lang !== msg.original_lang && (
                       <span className="ml-1.5 opacity-60 text-xs">
@@ -276,15 +287,14 @@ export default function ChatRoom() {
                     )}
                   </p>
 
-                  <p className={`text-[18px] sm:text-[19px] leading-relaxed whitespace-pre-wrap break-words font-medium ${
-                    isMine ? 'text-white' : ''
-                  }`} style={!isMine ? { color: 'var(--text)' } : {}}>
+                  <p className="text-[18px] sm:text-[19px] leading-relaxed whitespace-pre-wrap break-words font-medium"
+                    style={{ color: '#1e375a' }}>
                     {display}
                   </p>
 
-                  <div className={`flex items-center justify-between mt-1.5`}>
+                  <div className="flex items-center justify-between mt-1.5">
                     <button
-                      onClick={() => speakText(display, msg.original_lang, msg.id)}
+                      onClick={() => speakText(display, speechLangFor(msg), msg.id)}
                       className="tts-btn w-7 h-7 flex items-center justify-center rounded-md transition-colors text-sm"
                       style={{
                         color: '#1e375a',
@@ -294,8 +304,7 @@ export default function ChatRoom() {
                     >
                       {isSpeaking ? '🔊' : '🔈'}
                     </button>
-                    <p className={`text-xs ${isMine ? 'text-white/50' : ''}`}
-                      style={!isMine ? { color: 'var(--text-muted)' } : {}}>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       {new Date(msg.created_at).toLocaleTimeString('zh-HK', {
                         hour: '2-digit', minute: '2-digit',
                       })}
@@ -310,20 +319,22 @@ export default function ChatRoom() {
       </div>
 
       {/* Input */}
-      <div className="px-4 sm:px-6 py-3.5 border-t shrink-0 bg-white" style={{ borderColor: 'var(--border)' }}>
-        <div className="flex gap-2 items-center">
+      <div className="px-4 sm:px-6 py-3 border-t shrink-0 bg-white" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex gap-3 items-center">
           <textarea ref={inputRef}
             value={inputText}
             onChange={(e) => {
               setInputText(e.target.value);
               e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
             }}
             onKeyDown={handleKeyDown}
             placeholder={`輸入訊息 (${getLanguageName(language)})...`}
             rows={1}
-            className="flex-1 px-5 py-3.5 rounded-lg text-[17px] placeholder: resize-none max-h-[150px] transition-all"
+            className="flex-1 rounded-lg placeholder: resize-none max-h-[120px] transition-all focus:outline-none"
             style={{
+              fontSize: '20px',
+              padding: '8px',
               backgroundColor: 'var(--bg-input)',
               border: '1px solid var(--border)',
               color: 'var(--text)',
@@ -331,10 +342,13 @@ export default function ChatRoom() {
           />
           <button onClick={sendMessage}
             disabled={!inputText.trim() || sending}
-            className="px-7 py-3.5 rounded-lg font-bold text-white text-[17px] transition-all shrink-0 disabled:opacity-30"
+            className="rounded-lg font-bold text-white transition-all shrink-0 disabled:opacity-30 whitespace-nowrap"
             style={{
+              fontSize: '20px',
+              padding: '8px 16px',
               backgroundColor: 'var(--primary)',
               boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
+              borderRadius: '12px',
             }}>
             {sending ? '...' : '發送 →'}
           </button>

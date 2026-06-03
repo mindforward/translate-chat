@@ -8,11 +8,16 @@ import { generateSessionToken } from '@/lib/utils';
 const LANGUAGES = [
   { code: 'yue', name: '廣東話', flag: '🇭🇰' },
   { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'zh', name: '普通話', flag: '🇨🇳' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
   { code: 'ko', name: '한국어', flag: '🇰🇷' },
 ];
+
+function generateDefaultName(): string {
+  const num = Math.floor(1000 + Math.random() * 9000);
+  return `用戶${num}`;
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -67,10 +72,13 @@ export default function HomePage() {
 
   const handleJoinRoom = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Auto-generate name if empty
+    const finalName = nickname.trim() || generateDefaultName();
     if (!nickname.trim()) {
-      setError('請輸入你的名稱');
-      return;
+      setNickname(finalName);
     }
+
     setLoading(true);
     setError('');
 
@@ -80,7 +88,7 @@ export default function HomePage() {
         .from('sessions')
         .insert({
           room_id: roomId,
-          nickname: nickname.trim(),
+          nickname: finalName,
           language,
           session_token: sessionToken,
         });
@@ -92,7 +100,7 @@ export default function HomePage() {
       }
 
       sessionStorage.setItem('session_token', sessionToken);
-      sessionStorage.setItem('nickname', nickname.trim());
+      sessionStorage.setItem('nickname', finalName);
       sessionStorage.setItem('language', language);
       sessionStorage.setItem('room_id', String(roomId));
 
@@ -130,18 +138,23 @@ export default function HomePage() {
                 value={inviteToken}
                 onChange={(e) => setInviteToken(e.target.value)}
                 placeholder="例如: a1b2c3d4e5f6g7h8"
-                className="w-full px-5 py-4 rounded-lg text-[17px] placeholder: mb-4 transition-all focus:outline-none"
+                className="w-full rounded-lg placeholder: mb-4 transition-all focus:outline-none"
                 style={{
+                  fontSize: '20px',
+                  padding: '8px',
                   backgroundColor: 'var(--bg-input)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                 }}
               />
               <button type="submit" disabled={loading}
-                className="w-full py-4 rounded-lg font-bold text-white text-[17px] transition-all disabled:opacity-40"
+                className="w-full rounded-lg font-bold text-white transition-all disabled:opacity-40"
                 style={{
+                  fontSize: '20px',
+                  padding: '8px',
                   backgroundColor: 'var(--primary)',
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
+                  borderRadius: '12px',
                 }}>
                 {loading ? '驗證中...' : '下一步 →'}
               </button>
@@ -155,13 +168,15 @@ export default function HomePage() {
 
               <div className="mb-5">
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  你的名稱
+                  你的名稱（留空自動生成）
                 </label>
                 <input type="text" value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  placeholder="例如: 小明"
-                  className="w-full px-5 py-4 rounded-lg text-[17px] placeholder: transition-all focus:outline-none"
+                  placeholder="留空將自動分配名稱"
+                  className="w-full rounded-lg placeholder: transition-all focus:outline-none"
                   style={{
+                    fontSize: '20px',
+                    padding: '8px',
                     backgroundColor: 'var(--bg-input)',
                     border: '1px solid var(--border)',
                     color: 'var(--text)',
@@ -173,21 +188,26 @@ export default function HomePage() {
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                   你的語言
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-[5px]">
                   {LANGUAGES.map((lang) => (
                     <button key={lang.code} type="button"
                       onClick={() => setLanguage(lang.code)}
-                      className={`px-2 py-3.5 rounded-lg text-[15px] font-medium transition-all`}
-                      style={language === lang.code ? {
-                        backgroundColor: 'var(--primary)',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        boxShadow: '0 4px 10px 0 rgba(0, 171, 228, 0.2)',
-                        border: 'none',
-                      } : {
-                        backgroundColor: '#fff',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text)',
+                      className="font-medium transition-all m-[2.5px]"
+                      style={{
+                        fontSize: '20px',
+                        padding: '8px',
+                        borderRadius: '8px',
+                        ...(language === lang.code ? {
+                          backgroundColor: 'var(--primary)',
+                          color: '#fff',
+                          fontWeight: 'bold',
+                          boxShadow: '0 4px 10px 0 rgba(0, 171, 228, 0.2)',
+                          border: 'none',
+                        } : {
+                          backgroundColor: '#fff',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                        }),
                       }}>
                       {lang.flag} {lang.name}
                     </button>
@@ -196,10 +216,13 @@ export default function HomePage() {
               </div>
 
               <button type="submit" disabled={loading}
-                className="w-full py-4 rounded-lg font-bold text-white text-[17px] transition-all disabled:opacity-40"
+                className="w-full rounded-lg font-bold text-white transition-all disabled:opacity-40"
                 style={{
+                  fontSize: '20px',
+                  padding: '8px',
                   backgroundColor: 'var(--primary)',
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
+                  borderRadius: '12px',
                 }}>
                 {loading ? '加入中...' : '進入聊天室 💬'}
               </button>
