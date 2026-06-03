@@ -216,7 +216,7 @@ export default function ChatRoom() {
             style={{ color: 'var(--text-secondary)' }}>
             ←
           </button>
-          <div className="ml-2 min-w-0">
+          <div className="ml-[10px] min-w-0">
             <h1 className="font-bold truncate" style={{ fontSize: '18px', color: 'var(--text)' }}>
               聊天室 {roomId}
             </h1>
@@ -231,7 +231,7 @@ export default function ChatRoom() {
             {getLanguageName(language)}
           </span>
           <button onClick={() => setShowClearConfirm(true)}
-            className="ml-2 text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
+            className="ml-[10px] text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
             style={{ color: 'var(--text-muted)' }}>
             清除
           </button>
@@ -263,8 +263,8 @@ export default function ChatRoom() {
 
           return (
             <div key={msg.id}
-              className="message-enter message-group">
-              <div className={`flex ${isMine ? 'justify-end mr-[15px]' : 'justify-start ml-[15px]'} items-end gap-2`}>
+              className="message-enter message-group my-[5px]">
+              <div className={`flex ${isMine ? 'justify-end mr-5' : 'justify-start ml-5'} items-end gap-2`}>
                 <div
                   className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-xl bubble-wrap ${isMine ? 'bubble-own' : 'bubble-other'}`}
                   style={{

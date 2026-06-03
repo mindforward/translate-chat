@@ -72,7 +72,7 @@ export default function AdminPage() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-dvh flex items-center justify-center p-5" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="min-h-dvh flex items-center justify-center px-[50px] py-5" style={{ backgroundColor: 'var(--bg)' }}>
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">⚙️</div>
@@ -146,7 +146,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-dvh p-5 sm:p-6 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-dvh px-[50px] py-5 sm:px-[50px] sm:py-6 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[22px] font-bold" style={{ color: '#1e375a' }}>⚙️ Admin</h1>

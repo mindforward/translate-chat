@@ -112,7 +112,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-6 sm:p-8" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-dvh flex items-center justify-center px-[50px] py-6 sm:px-[50px] sm:py-8" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <div className="text-6xl mb-4">💬</div>
