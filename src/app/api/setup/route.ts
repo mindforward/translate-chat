@@ -2,27 +2,30 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    const dbPassword = process.env.SUPABASE_DB_PASSWORD;
     const serviceKey = process.env.SUPABASE_SERVICE_KEY;
-    if (!serviceKey) {
-      return NextResponse.json({ error: 'SUPABASE_SERVICE_KEY not set' }, { status: 500 });
+    const projectRef = 'hxjuvftkczrkerkiftfy';
+
+    if (!dbPassword || !serviceKey) {
+      return NextResponse.json({ error: 'Database credentials not set' }, { status: 500 });
     }
 
-    // Use pg to connect to Supabase transaction pooler
     const { Client } = await import('pg');
 
+    // Try pooler connection with actual DB password
     const client = new Client({
       host: 'aws-0-ap-southeast-1.pooler.supabase.com',
       port: 6543,
       database: 'postgres',
-      user: 'postgres.azpvtdhqvfksefuwfueb',
-      password: serviceKey,
+      user: `postgres.${projectRef}`,
+      password: dbPassword,
       ssl: { rejectUnauthorized: false },
       connectionTimeoutMillis: 15000,
     });
 
     await client.connect();
 
-    // Create tables
+    // Create all tables
     const sql = `
       CREATE TABLE IF NOT EXISTS rooms (
         id SERIAL PRIMARY KEY,
@@ -30,7 +33,6 @@ export async function GET() {
         password_hash TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
-
       CREATE TABLE IF NOT EXISTS invite_links (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
@@ -39,9 +41,7 @@ export async function GET() {
         used BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
-
       CREATE INDEX IF NOT EXISTS idx_invite_links_token ON invite_links(token);
-
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
@@ -50,9 +50,7 @@ export async function GET() {
         session_token TEXT UNIQUE NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
-
       CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token);
-
       CREATE TABLE IF NOT EXISTS messages (
         id BIGSERIAL PRIMARY KEY,
         room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
@@ -64,19 +62,17 @@ export async function GET() {
         translated_lang TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
-
       CREATE INDEX IF NOT EXISTS idx_messages_room ON messages(room_id, created_at);
     `;
 
     await client.query(sql);
     console.log('Tables created');
 
-    // Check if rooms exist
+    // Check rooms
     const roomsResult = await client.query('SELECT COUNT(*) as count FROM rooms');
     const roomCount = parseInt(roomsResult.rows[0]?.count || '0');
-    
+
     if (roomCount === 0) {
-      // Insert default rooms with bcrypt hashes
       const bcrypt = await import('bcryptjs');
       const passwords = ['fred2024', 'joseph2024', 'family2024', 'friends2024', 'guest2024'];
       const roomNames = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E'];
@@ -88,24 +84,23 @@ export async function GET() {
           [i + 1, roomNames[i], hash]
         );
       }
-      console.log('Rooms seeded with passwords');
+      console.log('Rooms seeded');
     }
 
     // Enable RLS
-    const rlsSQL = `
+    await client.query(`
       ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
       ALTER TABLE invite_links ENABLE ROW LEVEL SECURITY;
       ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
       ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-    `;
-    await client.query(rlsSQL);
+    `);
     console.log('RLS enabled');
 
     await client.end();
 
     return NextResponse.json({
       success: true,
-      message: 'Database setup complete',
+      message: '✅ Database setup complete!',
       rooms: [
         { id: 1, name: 'Group A', password: 'fred2024' },
         { id: 2, name: 'Group B', password: 'joseph2024' },
