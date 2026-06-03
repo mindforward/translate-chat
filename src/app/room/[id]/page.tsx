@@ -264,7 +264,7 @@ export default function ChatRoom() {
           return (
             <div key={msg.id}
               className="message-enter message-group my-[5px]">
-              <div className={`flex ${isMine ? 'justify-end mr-5' : 'justify-start ml-5'} items-end gap-2`}>
+              <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2 mx-5`}>
                 <div
                   className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-xl bubble-wrap ${isMine ? 'bubble-own' : 'bubble-other'}`}
                   style={{
@@ -358,9 +358,9 @@ export default function ChatRoom() {
 
       {/* Clear modal - lightbox */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-6 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm"
           onClick={() => setShowClearConfirm(false)}>
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center"
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center mx-5"
             style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">🗑️</div>
