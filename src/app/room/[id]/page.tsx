@@ -265,11 +265,14 @@ export default function ChatRoom() {
 
           return (
             <div key={msg.id}
-              className="message-enter message-group my-[5px] mx-5">
+              className="message-enter message-group my-[5px]">
               <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                 <div
-                  className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-xl bubble-wrap ${isMine ? 'bubble-own' : 'bubble-other'}`}
+                  className={`rounded-xl bubble-wrap ${isMine ? 'bubble-own' : 'bubble-other'}`}
                   style={{
+                    maxWidth: 'calc(88% - 40px)',
+                    marginLeft: isMine ? '40px' : '20px',
+                    marginRight: isMine ? '20px' : '40px',
                     padding: '10px',
                     backgroundColor: isMine ? '#f0f4ff' : 'var(--bg-other)',
                     boxShadow: '0 2px 8px 0 rgba(35, 100, 210, 0.08)',
