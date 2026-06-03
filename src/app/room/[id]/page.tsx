@@ -45,7 +45,6 @@ export default function ChatRoom() {
     loadMessages(roomId);
     loadRoomInfo(roomId);
 
-    // Subscribe to Realtime
     const channel = supabase
       .channel(`room-${roomId}`)
       .on(
@@ -60,15 +59,9 @@ export default function ChatRoom() {
           setMessages((prev) => [...prev, payload.new]);
         }
       )
-      .subscribe((status) => {
-        if (status !== 'SUBSCRIBED') {
-          console.log('Realtime status:', status);
-        }
-      });
+      .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [roomId, router]);
 
   useEffect(() => {
@@ -92,8 +85,7 @@ export default function ChatRoom() {
       .eq('room_id', rid);
     if (sessions) {
       const myNick = sessionStorage.getItem('nickname');
-      const others = sessions.filter((s) => s.nickname !== myNick);
-      setOtherNicknames(others.map((s) => s.nickname));
+      setOtherNicknames(sessions.filter((s) => s.nickname !== myNick).map((s) => s.nickname));
     }
   };
 
@@ -102,7 +94,6 @@ export default function ChatRoom() {
     setSending(true);
 
     try {
-      // Get other languages in room from DB
       const { data: sessions } = await supabase
         .from('sessions')
         .select('language')
@@ -123,7 +114,7 @@ export default function ChatRoom() {
           body: JSON.stringify({
             text: inputText.trim(),
             sourceLang: language,
-            targetLang: targetLang,
+            targetLang,
           }),
         });
         const transData = await transRes.json();
@@ -146,33 +137,26 @@ export default function ChatRoom() {
       setInputText('');
       inputRef.current?.focus();
     } catch (err) {
-      console.error('Send error:', err);
+      console.error(err);
     }
     setSending(false);
   };
 
   const clearMessages = async () => {
     if (!sessionToken) return;
-    try {
-      const res = await fetch('/api/clear-room', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId }),
-      });
-      if (res.ok) {
-        setMessages([]);
-        setShowClearConfirm(false);
-      }
-    } catch (err) {
-      console.error(err);
+    const res = await fetch('/api/clear-room', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId }),
+    });
+    if (res.ok) {
+      setMessages([]);
+      setShowClearConfirm(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   const displayText = (msg: Message) => {
@@ -185,76 +169,67 @@ export default function ChatRoom() {
   const isMyMessage = (msg: Message) => msg.nickname === nickname;
 
   return (
-    <div className="h-dvh flex flex-col max-w-[720px] mx-auto px-0 bg-white shadow-sm border-x border-[var(--border)]">
+    <div className="h-dvh flex flex-col max-w-[780px] mx-auto bg-white border-x border-[var(--border)]">
+
       {/* Header */}
-      <header className="px-4 sm:px-6 py-3.5 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-white">
+      <header className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between shrink-0 bg-white">
         <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={() => router.push('/')}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--bg)] text-[var(--text-secondary)] text-lg transition-colors shrink-0"
-          >
+          <button onClick={() => router.push('/')}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--bg)] text-[20px] text-[var(--text-secondary)] shrink-0 transition-colors">
             ←
           </button>
           <div className="min-w-0">
-            <h1 className="font-semibold text-[17px] sm:text-[18px] text-[var(--text)] truncate">
-              聊天室 {roomId}
-            </h1>
-            <p className="text-[13px] sm:text-[14px] text-[var(--text-muted)] truncate">
+            <h1 className="font-bold text-[20px] text-[var(--text)] truncate">聊天室 {roomId}</h1>
+            <p className="text-[14px] text-[var(--text-muted)] truncate">
               {otherNicknames.length > 0 ? otherNicknames.join('、') : '等待其他人加入...'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[12px] sm:text-[13px] px-3 py-1 bg-[var(--primary-light)] text-[var(--primary-text)] rounded-full font-medium">
+          <span className="text-[13px] px-3 py-1.5 bg-[var(--primary-light)] text-[var(--primary-text)] rounded-full font-semibold">
             {getLanguageName(language)}
           </span>
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="text-[12px] sm:text-[13px] px-3 py-1 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors"
-          >
+          <button onClick={() => setShowClearConfirm(true)}
+            className="text-[13px] px-3 py-1.5 bg-red-50 text-red-600 rounded-full font-medium hover:bg-red-100 transition-colors">
             清除
           </button>
         </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-3 bg-[var(--bg)]">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3 bg-[var(--bg)]">
         {messages.length === 0 && (
-          <div className="text-center mt-20">
-            <p className="text-5xl mb-4">💬</p>
-            <p className="text-[var(--text-secondary)] font-medium text-[16px]">未有對話記錄</p>
-            <p className="text-[14px] text-[var(--text-muted)] mt-1">發送第一條訊息開始對話吧！</p>
+          <div className="text-center mt-24">
+            <p className="text-6xl mb-4">💬</p>
+            <p className="text-[var(--text-secondary)] font-semibold text-[18px]">未有對話記錄</p>
+            <p className="text-[15px] text-[var(--text-muted)] mt-2">發送第一條訊息開始對話吧！</p>
           </div>
         )}
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`message-enter flex ${isMyMessage(msg) ? 'justify-end' : 'justify-start'} px-1`}
-          >
-            <div
-              className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-2xl px-4 py-3 ${
-                isMyMessage(msg)
-                  ? 'bg-[var(--bg-own)] rounded-br-sm text-white shadow-sm'
-                  : 'bg-white border border-[var(--border)] rounded-bl-sm shadow-sm'
-              }`}
-            >
-              <p className={`text-[13px] sm:text-[14px] mb-1 font-medium ${
+          <div key={msg.id}
+            className={`message-enter flex ${isMyMessage(msg) ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-2xl px-5 py-3.5 ${
+              isMyMessage(msg)
+                ? 'bg-[var(--bg-own)] rounded-br-sm'
+                : 'bg-white border border-[var(--border)] rounded-bl-sm shadow-sm'
+            }`}>
+              <p className={`text-[14px] font-semibold mb-1 ${
                 isMyMessage(msg) ? 'text-indigo-200' : 'text-[var(--text-secondary)]'
               }`}>
                 {msg.nickname}
                 {msg.translated_lang && msg.translated_lang !== msg.original_lang && (
-                  <span className="ml-1.5 opacity-60 text-[12px]">
+                  <span className="ml-1.5 opacity-60 text-[13px]">
                     {getLanguageName(msg.translated_lang)}
                   </span>
                 )}
               </p>
-
-              <p className="text-[16px] sm:text-[17px] leading-relaxed whitespace-pre-wrap break-words">
+              <p className={`text-[18px] sm:text-[19px] leading-relaxed whitespace-pre-wrap break-words font-medium ${
+                isMyMessage(msg) ? 'text-white' : 'text-[var(--text)]'
+              }`}>
                 {displayText(msg)}
               </p>
-
-              <p className={`text-[11px] mt-1 text-right ${
-                isMyMessage(msg) ? 'text-indigo-200/60' : 'text-[var(--text-muted)]'
+              <p className={`text-[12px] mt-1.5 text-right ${
+                isMyMessage(msg) ? 'text-indigo-200/70' : 'text-[var(--text-muted)]'
               }`}>
                 {new Date(msg.created_at).toLocaleTimeString('zh-HK', {
                   hour: '2-digit', minute: '2-digit',
@@ -267,10 +242,9 @@ export default function ChatRoom() {
       </div>
 
       {/* Input */}
-      <div className="px-3 sm:px-5 py-3 border-t border-[var(--border)] bg-white shrink-0">
-        <div className="flex gap-2 items-end">
-          <textarea
-            ref={inputRef}
+      <div className="px-4 sm:px-6 py-3.5 border-t border-[var(--border)] bg-white shrink-0">
+        <div className="flex gap-2 items-center">
+          <textarea ref={inputRef}
             value={inputText}
             onChange={(e) => {
               setInputText(e.target.value);
@@ -280,18 +254,16 @@ export default function ChatRoom() {
             onKeyDown={handleKeyDown}
             placeholder={`輸入訊息 (${getLanguageName(language)})...`}
             rows={1}
-            className="flex-1 px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-2xl text-[var(--text)] text-[16px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] resize-none max-h-[150px]"
+            className="flex-1 px-5 py-3.5 bg-[var(--bg-input)] border-2 border-[var(--border)] rounded-2xl text-[var(--text)] text-[17px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:bg-white resize-none max-h-[150px] transition-colors"
           />
-          <button
-            onClick={sendMessage}
+          <button onClick={sendMessage}
             disabled={!inputText.trim() || sending}
-            className="px-6 py-3 bg-[var(--primary)] hover:brightness-110 disabled:opacity-30 rounded-2xl font-medium text-white text-[15px] transition-all shrink-0"
-          >
+            className="px-7 py-3.5 bg-[var(--primary)] hover:brightness-110 disabled:opacity-30 rounded-2xl font-bold text-white text-[17px] transition-all shrink-0 shadow-sm">
             {sending ? '...' : '發送 →'}
           </button>
         </div>
         <p className="mt-1.5 text-[12px] text-[var(--text-muted)] text-center">
-          Enter 發送 · Shift+Enter 換行
+          ⏎ Enter 發送 · ⇧ Shift+Enter 換行
         </p>
       </div>
 
@@ -299,17 +271,15 @@ export default function ChatRoom() {
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="text-[17px] font-semibold mb-3">清除對話記錄？</h3>
-            <p className="text-[15px] text-[var(--text-secondary)] mb-5">
-              此操作將會清除所有對話記錄，無法復原。
-            </p>
+            <h3 className="text-[18px] font-bold mb-3">清除對話記錄？</h3>
+            <p className="text-[15px] text-[var(--text-secondary)] mb-5">無法復原。</p>
             <div className="flex gap-3">
               <button onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-2.5 bg-[var(--bg-input)] rounded-xl text-[14px] font-medium hover:bg-[var(--border)] transition-colors">
+                className="flex-1 py-3 bg-[var(--bg-input)] rounded-xl text-[15px] font-medium hover:bg-[var(--border)] transition-colors">
                 取消
               </button>
               <button onClick={clearMessages}
-                className="flex-1 py-2.5 bg-red-500 rounded-xl text-[14px] font-medium text-white hover:bg-red-600 transition-colors">
+                className="flex-1 py-3 bg-red-500 rounded-xl text-[15px] font-bold text-white hover:bg-red-600 transition-colors">
                 確認清除
               </button>
             </div>
