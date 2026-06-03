@@ -72,9 +72,10 @@ export async function GET() {
     console.log('Tables created');
 
     // Check if rooms exist
-    const { rowCount } = await client.query('SELECT COUNT(*) as count FROM rooms');
+    const roomsResult = await client.query('SELECT COUNT(*) as count FROM rooms');
+    const roomCount = parseInt(roomsResult.rows[0]?.count || '0');
     
-    if (parseInt(rowCount?.[0]?.count || '0') === 0) {
+    if (roomCount === 0) {
       // Insert default rooms with bcrypt hashes
       const bcrypt = await import('bcryptjs');
       const passwords = ['fred2024', 'joseph2024', 'family2024', 'friends2024', 'guest2024'];
