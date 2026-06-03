@@ -265,7 +265,7 @@ export default function ChatRoom() {
 
           return (
             <div key={msg.id}
-              className="message-enter message-group my-[5px]">
+              className="message-enter message-group my-[5px] mx-5">
               <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                 <div
                   className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-xl bubble-wrap ${isMine ? 'bubble-own' : 'bubble-other'}`}
@@ -362,7 +362,7 @@ export default function ChatRoom() {
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowClearConfirm(false)}>
-          <div className="bg-white rounded-2xl p-8 w-[90%] max-w-sm shadow-2xl text-center"
+          <div className="bg-white rounded-2xl p-8 w-[50%] max-w-sm min-w-[280px] shadow-2xl text-center"
             style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">🗑️</div>
@@ -370,13 +370,13 @@ export default function ChatRoom() {
             <p className="text-[15px] mb-6" style={{ color: 'var(--text-secondary)' }}>這個操作無法復原。</p>
             <div className="flex gap-3">
               <button onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-3.5 rounded-xl text-[16px] font-semibold transition-all hover:brightness-95"
-                style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+                className="flex-1 rounded-xl font-semibold transition-all hover:brightness-95"
+                style={{ fontSize: '18px', padding: '15px', backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
                 取消
               </button>
               <button onClick={clearMessages}
-                className="flex-1 py-3.5 rounded-xl text-[16px] font-bold text-white transition-all hover:brightness-110"
-                style={{ backgroundColor: '#e74c3c' }}>
+                className="flex-1 rounded-xl font-bold text-white transition-all hover:brightness-110"
+                style={{ fontSize: '18px', padding: '15px', backgroundColor: '#e74c3c' }}>
                 確認清除
               </button>
             </div>
