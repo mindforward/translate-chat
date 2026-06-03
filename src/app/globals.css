@@ -45,6 +45,30 @@ body {
   animation: slideIn 0.25s ease-out;
 }
 
+/* Speech bubble tails */
+.bubble-wrap {
+  position: relative;
+}
+.bubble-wrap::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  width: 0;
+  height: 0;
+}
+.bubble-own::after {
+  right: -8px;
+  border-left: 8px solid #f0f4ff;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+.bubble-other::after {
+  left: -8px;
+  border-right: 8px solid #ffffff;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+
 /* TTS button */
 .tts-btn {
   opacity: 0;
