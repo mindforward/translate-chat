@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Message } from '@/lib/supabase';
@@ -208,7 +209,7 @@ export default function ChatRoom() {
   return (
     <>
     <div className="h-dvh flex flex-col max-w-[780px] mx-auto bg-white">
-      {/* Header — single row: ← back + room title | lang + clear */}
+      {/* Header */}
       <header className="px-4 py-3 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center min-w-0">
@@ -357,13 +358,11 @@ export default function ChatRoom() {
         </p>
       </div>
     </div>
-
-      {/* Clear modal - lightbox */}
-      {showClearConfirm && (
-        <div className="fixed inset-0 z-50"
-          style={{ backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}
+      {showClearConfirm && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowClearConfirm(false)}>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-8 w-[90%] max-w-sm shadow-2xl text-center"
+          <div className="bg-white rounded-2xl p-8 w-[90%] max-w-sm shadow-2xl text-center"
             style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">🗑️</div>
@@ -382,7 +381,8 @@ export default function ChatRoom() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
