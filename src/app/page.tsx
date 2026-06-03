@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { generateSessionToken } from '@/lib/utils';
@@ -24,6 +24,20 @@ export default function HomePage() {
   const [inviteToken, setInviteToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Check for invite info from sessionStorage (redirected from /invite/[token])
+  useEffect(() => {
+    const storedRoomId = sessionStorage.getItem('invite_room_id');
+    const storedToken = sessionStorage.getItem('invite_token');
+    if (storedRoomId && storedToken) {
+      setRoomId(Number(storedRoomId));
+      setInviteToken(storedToken);
+      setStep('room');
+      // Clean up
+      sessionStorage.removeItem('invite_room_id');
+      sessionStorage.removeItem('invite_token');
+    }
+  }, []);
 
   // Check invite link on mount
   const handleInviteSubmit = async (e: React.FormEvent) => {

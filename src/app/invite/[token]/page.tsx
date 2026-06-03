@@ -7,7 +7,7 @@ export default function InvitePage() {
   const params = useParams();
   const router = useRouter();
   const token = params.token as string;
-  const [status, setStatus] = useState<'verifying' | 'expired' | 'used' | 'invalid' | 'redirecting'>('verifying');
+  const [status, setStatus] = useState<'verifying' | 'expired' | 'used' | 'invalid'>('verifying');
   const [roomId, setRoomId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -33,15 +33,13 @@ export default function InvitePage() {
           return;
         }
 
-        // Valid invite - pre-fill room info
-        setRoomId(data.room_id);
+        // Store invite info in sessionStorage, then redirect
         sessionStorage.setItem('invite_room_id', String(data.room_id));
-        setStatus('redirecting');
+        sessionStorage.setItem('invite_token', token);
+        setRoomId(data.room_id);
 
-        // Redirect to login page
-        setTimeout(() => {
-          router.push('/');
-        }, 1500);
+        // Redirect immediately to login page
+        router.replace('/');
       } catch {
         setStatus('invalid');
       }
@@ -74,12 +72,6 @@ export default function InvitePage() {
       desc: '請檢查連結是否正確，或向管理員獲取新嘅 Invite Link',
       color: 'text-red-400',
     },
-    redirecting: {
-      icon: '🔄',
-      title: '✅ Invite Link 有效！',
-      desc: roomId ? `準備進入 Room ${roomId}...` : '準備進入聊天室...',
-      color: 'text-green-400',
-    },
   };
 
   const cfg = statusConfig[status];
@@ -95,7 +87,7 @@ export default function InvitePage() {
         {status === 'verifying' && (
           <div className="mt-6 animate-pulse text-[var(--text-muted)]">驗證中...</div>
         )}
-        {status !== 'verifying' && status !== 'redirecting' && (
+        {status !== 'verifying' && (
           <button
             onClick={() => router.push('/')}
             className="mt-6 px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] rounded-xl font-semibold transition-colors"
