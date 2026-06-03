@@ -247,7 +247,7 @@ export default function ChatRoom() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-2"
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-2"
         style={{ backgroundColor: 'var(--bg)' }}>
         {messages.length === 0 && (
           <div className="text-center mt-24">
@@ -263,8 +263,8 @@ export default function ChatRoom() {
 
           return (
             <div key={msg.id}
-              className="message-enter message-group my-[5px]">
-              <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2 mx-5`}>
+              className="message-enter message-group my-[5px] mx-5">
+              <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                 <div
                   className={`max-w-[88%] sm:max-w-[75%] lg:max-w-[65%] rounded-xl bubble-wrap ${isMine ? 'bubble-own' : 'bubble-other'}`}
                   style={{
@@ -358,9 +358,10 @@ export default function ChatRoom() {
 
       {/* Clear modal - lightbox */}
       {showClearConfirm && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50"
+          style={{ backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}
           onClick={() => setShowClearConfirm(false)}>
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center mx-5"
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-8 w-[90%] max-w-sm shadow-2xl text-center"
             style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">🗑️</div>
