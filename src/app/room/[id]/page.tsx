@@ -210,19 +210,19 @@ export default function ChatRoom() {
       {/* Header — single row: ← back + room title | lang + clear */}
       <header className="px-4 py-3 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border)' }}>
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center min-w-0">
           <button onClick={() => router.push('/')}
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-[18px] shrink-0 transition-colors"
             style={{ color: 'var(--text-secondary)' }}>
             ←
           </button>
-          <div className="min-w-0">
+          <div className="ml-2 min-w-0">
             <h1 className="font-bold truncate" style={{ fontSize: '18px', color: 'var(--text)' }}>
               聊天室 {roomId}
             </h1>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center shrink-0">
           <span className="text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap"
             style={{
               backgroundColor: 'var(--primary-light)',
@@ -231,7 +231,7 @@ export default function ChatRoom() {
             {getLanguageName(language)}
           </span>
           <button onClick={() => setShowClearConfirm(true)}
-            className="text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
+            className="ml-2 text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
             style={{ color: 'var(--text-muted)' }}>
             清除
           </button>
@@ -358,21 +358,24 @@ export default function ChatRoom() {
         </p>
       </div>
 
-      {/* Clear modal */}
+      {/* Clear modal - lightbox */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg"
-            style={{ boxShadow: '0 30px 60px 0 rgba(170, 195, 225, 0.3)' }}>
-            <h3 className="text-[18px] font-bold mb-3" style={{ color: 'var(--text)' }}>清除對話記錄？</h3>
-            <p className="text-[15px] mb-5" style={{ color: 'var(--text-secondary)' }}>無法復原。</p>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-6 backdrop-blur-sm"
+          onClick={() => setShowClearConfirm(false)}>
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center"
+            style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div className="text-5xl mb-4">🗑️</div>
+            <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--text)' }}>清除對話記錄？</h3>
+            <p className="text-[15px] mb-6" style={{ color: 'var(--text-secondary)' }}>這個操作無法復原。</p>
             <div className="flex gap-3">
               <button onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-3 rounded-lg text-[15px] font-semibold transition-colors"
-                style={{ backgroundColor: 'var(--bg)', color: 'var(--text-secondary)' }}>
+                className="flex-1 py-3.5 rounded-xl text-[16px] font-semibold transition-all hover:brightness-95"
+                style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
                 取消
               </button>
               <button onClick={clearMessages}
-                className="flex-1 py-3 rounded-lg text-[15px] font-bold text-white transition-colors"
+                className="flex-1 py-3.5 rounded-xl text-[16px] font-bold text-white transition-all hover:brightness-110"
                 style={{ backgroundColor: '#e74c3c' }}>
                 確認清除
               </button>

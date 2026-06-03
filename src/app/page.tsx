@@ -112,7 +112,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-4 sm:p-6" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-dvh flex items-center justify-center p-6 sm:p-8" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <div className="text-6xl mb-4">💬</div>
@@ -173,12 +173,12 @@ export default function HomePage() {
                 <input type="text" value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="留空將自動分配名稱"
-                  className="w-full rounded-lg placeholder: transition-all focus:outline-none"
+                  className="w-full rounded-lg placeholder: transition-all focus:outline-none text-center"
                   style={{
                     fontSize: '20px',
                     padding: '8px',
                     backgroundColor: 'var(--bg-input)',
-                    border: '1px solid var(--border)',
+                    border: '2px solid #f59e0b',
                     color: 'var(--text)',
                   }}
                   maxLength={20} autoFocus />
@@ -216,10 +216,13 @@ export default function HomePage() {
               </div>
 
               <button type="submit" disabled={loading}
-                className="w-full rounded-lg font-bold text-white transition-all disabled:opacity-40"
+                className="w-full rounded-lg font-bold transition-all disabled:opacity-40"
                 style={{
                   fontSize: '20px',
                   padding: '8px',
+                  marginTop: '15px',
+                  marginBottom: '15px',
+                  color: '#fff',
                   backgroundColor: 'var(--primary)',
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
                   borderRadius: '12px',

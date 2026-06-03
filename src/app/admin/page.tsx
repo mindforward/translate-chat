@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 
 const ROOMS = [
-  { id: 1, name: 'Group A' },
-  { id: 2, name: 'Group B' },
-  { id: 3, name: 'Group C' },
-  { id: 4, name: 'Group D' },
-  { id: 5, name: 'Group E' },
+  { id: 1, name: 'Room A' },
+  { id: 2, name: 'Room B' },
+  { id: 3, name: 'Room C' },
+  { id: 4, name: 'Room D' },
+  { id: 5, name: 'Room E' },
 ];
 
 function CopyBtn({ text }: { text: string }) {
@@ -19,8 +19,10 @@ function CopyBtn({ text }: { text: string }) {
   };
   return (
     <button onClick={copy}
-      className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+      className="font-semibold rounded-lg transition-all whitespace-nowrap"
       style={{
+        fontSize: '16px',
+        padding: '10px 16px',
         backgroundColor: copied ? '#d4edda' : 'var(--primary-light)',
         color: copied ? '#155724' : 'var(--primary)',
         border: 'none',
@@ -70,7 +72,7 @@ export default function AdminPage() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-dvh flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="min-h-dvh flex items-center justify-center p-6" style={{ backgroundColor: 'var(--bg)' }}>
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">⚙️</div>
@@ -98,8 +100,13 @@ export default function AdminPage() {
             />
             <button
               type="submit"
-              className="w-full py-3.5 rounded-lg font-bold text-white text-[16px] transition-all"
+              className="w-full rounded-lg font-bold transition-all"
               style={{
+                fontSize: '20px',
+                padding: '8px',
+                marginTop: '15px',
+                marginBottom: '15px',
+                color: '#fff',
                 backgroundColor: 'var(--primary)',
                 boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
               }}
@@ -139,7 +146,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-dvh p-4 sm:p-6 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-dvh p-6 sm:p-8 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[22px] font-bold" style={{ color: '#1e375a' }}>⚙️ Admin</h1>
