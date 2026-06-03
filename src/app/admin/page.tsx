@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 const ROOMS = [
@@ -12,12 +12,79 @@ const ROOMS = [
 ];
 
 export default function AdminPage() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [adminPw, setAdminPw] = useState('');
+  const [pwError, setPwError] = useState('');
+
   const [selectedRoom, setSelectedRoom] = useState(1);
   const [inviteUrl, setInviteUrl] = useState('');
   const [inviteToken, setInviteToken] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Check if already logged in this session
+    if (sessionStorage.getItem('admin_logged_in') === 'true') {
+      setLoggedIn(true);
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError('');
+
+    try {
+      const res = await fetch('/admin/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPw }),
+      });
+      if (res.ok) {
+        sessionStorage.setItem('admin_logged_in', 'true');
+        setLoggedIn(true);
+      } else {
+        setPwError('密碼錯誤');
+      }
+    } catch {
+      setPwError('連線錯誤');
+    }
+  };
+
+  // If not logged in, show login screen
+  if (!loggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">⚙️ Admin Panel</h1>
+            <p className="text-[var(--text-muted)]">請輸入管理員密碼</p>
+          </div>
+          <form onSubmit={handleLogin} className="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border)]">
+            {pwError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                {pwError}
+              </div>
+            )}
+            <input
+              type="password"
+              value={adminPw}
+              onChange={(e) => setAdminPw(e.target.value)}
+              placeholder="Admin Password"
+              className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] mb-4"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] rounded-xl font-semibold transition-colors"
+            >
+              進入
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const generateInvite = async () => {
     setLoading(true);
@@ -36,7 +103,12 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Generation failed');
+        // Check if it's a table-doesn't-exist error
+        if (data.hint) {
+          setError(data.hint);
+        } else {
+          setError(data.error || 'Generation failed');
+        }
       } else {
         setInviteUrl(data.url);
         setInviteToken(data.token);
@@ -50,12 +122,41 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">⚙️ Admin Panel</h1>
-      <p className="text-[var(--text-muted)] mb-6">管理房間同 Invite Links</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">⚙️ Admin Panel</h1>
+          <p className="text-[var(--text-muted)]">管理房間同 Invite Links</p>
+        </div>
+        <button
+          onClick={() => {
+            sessionStorage.removeItem('admin_logged_in');
+            setLoggedIn(false);
+          }}
+          className="text-xs px-3 py-1.5 bg-[var(--bg-input)] rounded-lg text-[var(--text-muted)] hover:text-white transition-colors"
+        >
+          登出
+        </button>
+      </div>
 
+      {/* Database not setup warning */}
       {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-          {error}
+        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+          <div className="flex gap-2">
+            <span className="text-yellow-400 text-lg">⚠️</span>
+            <div>
+              <p className="text-yellow-400 text-sm font-medium mb-1">需要先設定 Database</p>
+              <p className="text-yellow-300/70 text-xs">
+                {error.includes('relation') || error.includes('does not exist') || error.includes('Failed')
+                  ? 'Database tables 未建立。請去 Supabase Dashboard → SQL Editor，執行以下 SQL：'
+                  : error}
+              </p>
+              {error.includes('Failed') && (
+                <pre className="mt-2 p-2 bg-black/30 rounded-lg text-[10px] text-yellow-300/60 overflow-x-auto max-h-32 overflow-y-auto">
+                  {`-- 貼去 Supabase Dashboard → SQL Editor 執行\nCREATE TABLE IF NOT EXISTS rooms (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  password_hash TEXT NOT NULL,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS invite_links (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,\n  token TEXT UNIQUE NOT NULL,\n  expires_at TIMESTAMPTZ NOT NULL,\n  used BOOLEAN DEFAULT FALSE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);`}
+                </pre>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -143,6 +244,32 @@ export default function AdminPage() {
         <p className="text-xs text-[var(--text-muted)] mt-3">
           💡 你可以喺 Supabase Dashboard 嘅 SQL Editor 修改密碼
         </p>
+      </div>
+
+      {/* Setup DB reminder */}
+      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mt-4">
+        <h3 className="font-semibold text-yellow-400 text-sm mb-2">📋 未設定 Database？</h3>
+        <p className="text-xs text-yellow-300/70 mb-2">
+          去 Supabase Dashboard → SQL Editor，執行 <code className="bg-black/30 px-1 rounded">scripts/schema-final.sql</code> 全部內容
+        </p>
+        <details className="text-xs">
+          <summary className="text-yellow-400/60 cursor-pointer hover:text-yellow-400">睇 SQL</summary>
+          <pre className="mt-2 p-2 bg-black/30 rounded-lg text-[10px] text-yellow-300/50 overflow-x-auto max-h-48 overflow-y-auto">
+{`CREATE TABLE IF NOT EXISTS rooms (...) ...
+CREATE TABLE IF NOT EXISTS invite_links (...) ...
+CREATE TABLE IF NOT EXISTS sessions (...) ...
+CREATE TABLE IF NOT EXISTS messages (...) ...
+
+-- 之後 INSERT 5 間房密碼：
+INSERT INTO rooms VALUES
+  (1, 'Group A', 'HASHED_PASSWORD_1'),
+  (2, 'Group B', 'HASHED_PASSWORD_2'),
+  ... etc
+
+完整 SQL 喺:
+https://github.com/mindforward/translate-chat/blob/main/scripts/schema-final.sql`}
+          </pre>
+        </details>
       </div>
 
       <p className="text-center text-xs text-[var(--text-muted)] mt-6">

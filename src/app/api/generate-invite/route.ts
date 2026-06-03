@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Create invite link error:', error);
+      const msg = error.message || '';
+      // Check if it's a missing table error
+      if (msg.includes('relation') || msg.includes('does not exist')) {
+        return NextResponse.json({
+          error: 'Database tables not set up',
+          hint: 'Please run the SQL setup in Supabase Dashboard SQL Editor first. See scripts/schema-final.sql',
+        }, { status: 500 });
+      }
       return NextResponse.json(
         { error: 'Failed to create invite link' },
         { status: 500 }
