@@ -77,20 +77,20 @@ export default function InvitePage() {
   const cfg = statusConfig[status];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-dvh flex items-center justify-center p-4 bg-[var(--bg)]">
       <div className="text-center">
         <div className="text-6xl mb-6">{cfg.icon}</div>
-        <h1 className={`text-2xl font-bold mb-3 ${cfg.color}`}>{cfg.title}</h1>
+        <h1 className={`text-[22px] font-bold mb-3 ${cfg.color}`}>{cfg.title}</h1>
         {'desc' in cfg && (
-          <p className="text-[var(--text-muted)] max-w-md">{cfg.desc}</p>
+          <p className="text-[var(--text-secondary)] text-[15px] max-w-sm">{cfg.desc}</p>
         )}
         {status === 'verifying' && (
-          <div className="mt-6 animate-pulse text-[var(--text-muted)]">驗證中...</div>
+          <div className="mt-6 animate-pulse text-[var(--text-muted)] text-[15px]">驗證中...</div>
         )}
         {status !== 'verifying' && (
           <button
             onClick={() => router.push('/')}
-            className="mt-6 px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] rounded-xl font-semibold transition-colors"
+            className="mt-6 px-6 py-3 bg-[var(--primary)] hover:brightness-110 rounded-xl font-medium text-white text-[15px] transition-all"
           >
             返回首頁
           </button>

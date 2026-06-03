@@ -4,47 +4,51 @@
 
 :root {
   --primary: #4f46e5;
-  --primary-light: #818cf8;
-  --primary-bg: #eef2ff;
-  --bg: #f8fafc;
+  --primary-light: #e0e7ff;
+  --primary-text: #4338ca;
+  --bg: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-input: #f1f5f9;
-  --bg-chat-own: #4f46e5;
-  --bg-chat-other: #f1f5f9;
-  --text: #1e293b;
-  --text-secondary: #64748b;
+  --bg-input: #f8fafc;
+  --bg-own: #4f46e5;
+  --bg-other: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #475569;
   --text-muted: #94a3b8;
   --text-white: #ffffff;
   --border: #e2e8f0;
-  --success: #22c55e;
-  --danger: #ef4444;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+input, textarea, button {
+  font-size: 16px;
+}
+
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 
 /* Message animations */
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .message-enter {
-  animation: slideIn 0.2s ease-out;
+  animation: slideIn 0.25s ease-out;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 2px;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }

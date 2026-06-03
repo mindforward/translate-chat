@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 
 const ROOMS = [
   { id: 1, name: 'Group A' },
@@ -24,7 +23,6 @@ export default function AdminPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check if already logged in this session
     if (sessionStorage.getItem('admin_logged_in') === 'true') {
       setLoggedIn(true);
     }
@@ -33,7 +31,6 @@ export default function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwError('');
-
     try {
       const res = await fetch('/admin/api/auth', {
         method: 'POST',
@@ -51,14 +48,14 @@ export default function AdminPage() {
     }
   };
 
-  // If not logged in, show login screen
   if (!loggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-dvh flex items-center justify-center p-4 bg-[var(--bg)]">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">⚙️ Admin Panel</h1>
-            <p className="text-[var(--text-muted)]">請輸入管理員密碼</p>
+            <div className="text-5xl mb-3">⚙️</div>
+            <h1 className="text-[26px] font-bold text-[var(--text)] mb-1">Admin Panel</h1>
+            <p className="text-[15px] text-[var(--text-secondary)]">請輸入管理員密碼</p>
           </div>
           <form onSubmit={handleLogin} className="bg-white rounded-2xl p-6 border border-[var(--border)] shadow-sm">
             {pwError && (
@@ -71,12 +68,12 @@ export default function AdminPage() {
               value={adminPw}
               onChange={(e) => setAdminPw(e.target.value)}
               placeholder="Admin Password"
-              className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[15px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary-light)] mb-4"
+              className="w-full px-4 py-3.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[16px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] mb-4"
               autoFocus
             />
             <button
               type="submit"
-              className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-xl font-medium text-white text-[15px] transition-colors"
+              className="w-full py-3.5 bg-[var(--primary)] hover:brightness-110 rounded-xl font-medium text-white text-[16px] transition-all"
             >
               進入
             </button>
@@ -96,19 +93,11 @@ export default function AdminPage() {
       const res = await fetch('/api/generate-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomId: selectedRoom,
-          expiresInMinutes: 15,
-        }),
+        body: JSON.stringify({ roomId: selectedRoom, expiresInMinutes: 15 }),
       });
       const data = await res.json();
       if (!res.ok) {
-        // Check if it's a table-doesn't-exist error
-        if (data.hint) {
-          setError(data.hint);
-        } else {
-          setError(data.error || 'Generation failed');
-        }
+        setError(data.error || 'Generation failed');
       } else {
         setInviteUrl(data.url);
         setInviteToken(data.token);
@@ -121,159 +110,84 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 max-w-2xl mx-auto">
+    <div className="min-h-dvh p-4 sm:p-6 max-w-lg mx-auto bg-[var(--bg)]">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">⚙️ Admin Panel</h1>
-          <p className="text-[var(--text-muted)]">管理房間同 Invite Links</p>
+          <h1 className="text-[22px] font-bold text-[var(--text)]">⚙️ Admin</h1>
+          <p className="text-[14px] text-[var(--text-secondary)]">管理 Invite Links</p>
         </div>
         <button
           onClick={() => {
             sessionStorage.removeItem('admin_logged_in');
             setLoggedIn(false);
           }}
-          className="text-xs px-3 py-1.5 bg-[var(--bg-input)] rounded-lg text-[var(--text-muted)] hover:text-white transition-colors"
+          className="text-[13px] px-3 py-1.5 bg-white border border-[var(--border)] rounded-xl text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
         >
           登出
         </button>
       </div>
 
-      {/* Database not setup warning */}
       {error && (
-        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-          <div className="flex gap-2">
-            <span className="text-yellow-400 text-lg">⚠️</span>
-            <div>
-              <p className="text-yellow-400 text-sm font-medium mb-1">需要先設定 Database</p>
-              <p className="text-yellow-300/70 text-xs">
-                {error.includes('relation') || error.includes('does not exist') || error.includes('Failed')
-                  ? 'Database tables 未建立。請去 Supabase Dashboard → SQL Editor，執行以下 SQL：'
-                  : error}
-              </p>
-              {error.includes('Failed') && (
-                <pre className="mt-2 p-2 bg-black/30 rounded-lg text-[10px] text-yellow-300/60 overflow-x-auto max-h-32 overflow-y-auto">
-                  {`-- 貼去 Supabase Dashboard → SQL Editor 執行\nCREATE TABLE IF NOT EXISTS rooms (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  password_hash TEXT NOT NULL,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS invite_links (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,\n  token TEXT UNIQUE NOT NULL,\n  expires_at TIMESTAMPTZ NOT NULL,\n  used BOOLEAN DEFAULT FALSE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);`}
-                </pre>
-              )}
-            </div>
-          </div>
+        <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-[14px]">
+          {error}
         </div>
       )}
 
       {/* Room Selection */}
-      <div className="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border)] mb-4">
-        <h2 className="font-semibold mb-4">選擇房間</h2>
+      <div className="bg-white rounded-2xl p-5 border border-[var(--border)] shadow-sm mb-3">
+        <h2 className="font-semibold text-[16px] mb-3">選擇房間</h2>
         <div className="grid grid-cols-5 gap-2">
           {ROOMS.map((room) => (
             <button
               key={room.id}
               onClick={() => setSelectedRoom(room.id)}
-              className={`py-2 rounded-xl text-sm font-medium transition-colors ${
+              className={`py-2.5 rounded-xl text-[13px] font-medium border transition-all ${
                 selectedRoom === room.id
-                  ? 'bg-[var(--primary)] text-white'
-                  : 'bg-[var(--bg-input)] text-[var(--text-muted)] hover:border-[var(--primary)] border border-[var(--border)]'
+                  ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm'
+                  : 'bg-white border-[var(--border)] text-[var(--text)] hover:border-[var(--primary)]'
               }`}
             >
               {room.name}
             </button>
           ))}
         </div>
-        <p className="text-sm text-[var(--text-muted)] mt-3">
-          當前選擇: Room {selectedRoom} ({ROOMS[selectedRoom - 1].name})
-        </p>
       </div>
 
-      {/* Generate Invite Link */}
-      <div className="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border)]">
-        <h2 className="font-semibold mb-4">🔗 產生一次性 Invite Link</h2>
-        <p className="text-sm text-[var(--text-muted)] mb-4">
-          產生後 15 分鐘內有效，使用一次後即失效
+      {/* Generate Invite */}
+      <div className="bg-white rounded-2xl p-5 border border-[var(--border)] shadow-sm">
+        <h2 className="font-semibold text-[16px] mb-1">🔗 一次性 Invite Link</h2>
+        <p className="text-[13px] text-[var(--text-secondary)] mb-4">
+          產生後 15 分鐘有效，使用一次即失效
         </p>
 
         <button
           onClick={generateInvite}
           disabled={loading}
-          className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] rounded-xl font-semibold transition-colors disabled:opacity-50 mb-4"
+          className="w-full py-3.5 bg-[var(--primary)] hover:brightness-110 rounded-xl font-medium text-white text-[15px] transition-all disabled:opacity-40 mb-4"
         >
           {loading ? '產生中...' : '產生 Invite Link'}
         </button>
 
         {inviteToken && (
-          <div className="space-y-3">
-            <div className="p-3 bg-[var(--bg-input)] rounded-xl">
-              <p className="text-xs text-[var(--text-muted)] mb-1">🔑 Token</p>
-              <p className="font-mono text-lg font-bold select-all">{inviteToken}</p>
+          <div className="space-y-2.5">
+            <div className="p-3.5 bg-[var(--bg-input)] rounded-xl border border-[var(--border)]">
+              <p className="text-[12px] text-[var(--text-muted)] mb-1">🔑 Token</p>
+              <p className="font-mono text-[16px] font-bold select-all text-[var(--text)]">{inviteToken}</p>
             </div>
-            <div className="p-3 bg-[var(--bg-input)] rounded-xl">
-              <p className="text-xs text-[var(--text-muted)] mb-1">🔗 Full URL</p>
-              <p className="text-sm break-all select-all">{inviteUrl}</p>
+            <div className="p-3.5 bg-[var(--bg-input)] rounded-xl border border-[var(--border)]">
+              <p className="text-[12px] text-[var(--text-muted)] mb-1">🔗 完整連結</p>
+              <p className="text-[14px] break-all select-all text-[var(--text)]">{inviteUrl}</p>
             </div>
-            <div className="p-3 bg-[var(--bg-input)] rounded-xl">
-              <p className="text-xs text-[var(--text-muted)] mb-1">⏰ 到期時間</p>
-              <p className="text-sm">{expiresAt}</p>
+            <div className="p-3.5 bg-[var(--bg-input)] rounded-xl border border-[var(--border)]">
+              <p className="text-[12px] text-[var(--text-muted)] mb-1">⏰ 到期</p>
+              <p className="text-[14px] text-[var(--text)]">{expiresAt}</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Room Passwords Info */}
-      <div className="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border)] mt-4">
-        <h2 className="font-semibold mb-4">🔒 Room Passwords</h2>
-        <div className="space-y-2">
-          {[
-            { room: 1, name: 'Group A', pw: 'fred2024' },
-            { room: 2, name: 'Group B', pw: 'joseph2024' },
-            { room: 3, name: 'Group C', pw: 'family2024' },
-            { room: 4, name: 'Group D', pw: 'friends2024' },
-            { room: 5, name: 'Group E', pw: 'guest2024' },
-          ].map((r) => (
-            <div
-              key={r.room}
-              className="flex items-center justify-between p-3 bg-[var(--bg-input)] rounded-xl"
-            >
-              <div>
-                <span className="text-sm font-medium">Room {r.room}</span>
-                <span className="text-xs text-[var(--text-muted)] ml-2">({r.name})</span>
-              </div>
-              <code className="text-sm font-mono px-2 py-1 bg-[var(--bg)] rounded-lg">
-                {r.pw}
-              </code>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-[var(--text-muted)] mt-3">
-          💡 你可以喺 Supabase Dashboard 嘅 SQL Editor 修改密碼
-        </p>
-      </div>
-
-      {/* Setup DB reminder */}
-      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mt-4">
-        <h3 className="font-semibold text-yellow-400 text-sm mb-2">📋 未設定 Database？</h3>
-        <p className="text-xs text-yellow-300/70 mb-2">
-          去 Supabase Dashboard → SQL Editor，執行 <code className="bg-black/30 px-1 rounded">scripts/schema-final.sql</code> 全部內容
-        </p>
-        <details className="text-xs">
-          <summary className="text-yellow-400/60 cursor-pointer hover:text-yellow-400">睇 SQL</summary>
-          <pre className="mt-2 p-2 bg-black/30 rounded-lg text-[10px] text-yellow-300/50 overflow-x-auto max-h-48 overflow-y-auto">
-{`CREATE TABLE IF NOT EXISTS rooms (...) ...
-CREATE TABLE IF NOT EXISTS invite_links (...) ...
-CREATE TABLE IF NOT EXISTS sessions (...) ...
-CREATE TABLE IF NOT EXISTS messages (...) ...
-
--- 之後 INSERT 5 間房密碼：
-INSERT INTO rooms VALUES
-  (1, 'Group A', 'HASHED_PASSWORD_1'),
-  (2, 'Group B', 'HASHED_PASSWORD_2'),
-  ... etc
-
-完整 SQL 喺:
-https://github.com/mindforward/translate-chat/blob/main/scripts/schema-final.sql`}
-          </pre>
-        </details>
-      </div>
-
-      <p className="text-center text-xs text-[var(--text-muted)] mt-6">
-        Translate Chat Admin v1.0
+      <p className="text-center text-[12px] text-[var(--text-muted)] mt-6">
+        Translate Chat v1.0
       </p>
     </div>
   );

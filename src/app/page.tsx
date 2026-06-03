@@ -16,23 +16,22 @@ const LANGUAGES = [
 
 export default function HomePage() {
   const router = useRouter();
-  const [step, setStep] = useState<'invite' | 'room'>('invite');
+  const [step, setStep] = useState<'invite' | 'profile'>('invite');
   const [nickname, setNickname] = useState('');
   const [language, setLanguage] = useState('yue');
   const [roomId, setRoomId] = useState<number>(1);
-  const [password, setPassword] = useState('');
   const [inviteToken, setInviteToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Auto-detect invite from sessionStorage (from /invite/[token])
+  // Auto-detect invite from /invite/[token] redirect
   useEffect(() => {
     const storedRoomId = sessionStorage.getItem('invite_room_id');
     const storedToken = sessionStorage.getItem('invite_token');
     if (storedRoomId && storedToken) {
       setRoomId(Number(storedRoomId));
       setInviteToken(storedToken);
-      setStep('room');
+      setStep('profile');
       sessionStorage.removeItem('invite_room_id');
       sessionStorage.removeItem('invite_token');
     }
@@ -60,35 +59,23 @@ export default function HomePage() {
         return;
       }
       setRoomId(data.room_id);
-      setStep('room');
+      setStep('profile');
     } catch {
       setError('無法驗證 Invite Link');
     }
     setLoading(false);
   };
 
-  const handleRoomSubmit = async (e: React.FormEvent) => {
+  const handleJoinRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nickname.trim() || !password.trim()) {
-      setError('請輸入名稱和密碼');
+    if (!nickname.trim()) {
+      setError('請輸入你的名稱');
       return;
     }
     setLoading(true);
     setError('');
 
     try {
-      const res = await fetch('/api/verify-room', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || '密碼錯誤');
-        setLoading(false);
-        return;
-      }
-
       const sessionToken = generateSessionToken();
       const { error: sessionError } = await supabase
         .from('sessions')
@@ -100,7 +87,7 @@ export default function HomePage() {
         });
 
       if (sessionError) {
-        setError('建立 session 失敗');
+        setError('加入聊天室失敗');
         setLoading(false);
         return;
       }
@@ -119,14 +106,14 @@ export default function HomePage() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center p-4 sm:p-6 bg-[var(--bg)]">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">💬</div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-1">Translate Chat</h1>
-          <p className="text-[15px] text-[var(--text-secondary)]">即時翻譯對話通訊</p>
+          <h1 className="text-[26px] sm:text-[30px] font-bold text-[var(--text)] mb-1">Translate Chat</h1>
+          <p className="text-[15px] text-[var(--text-secondary)]">即時翻譯對話</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 sm:p-7 shadow-sm border border-[var(--border)]">
+        <div className="bg-white rounded-2xl p-6 sm:p-7 shadow-sm border border-[var(--border)]">
           {error && (
             <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-[14px]">
               {error}
@@ -135,38 +122,34 @@ export default function HomePage() {
 
           {step === 'invite' ? (
             <form onSubmit={handleInviteSubmit}>
-              <h2 className="text-[17px] font-semibold text-[var(--text)] mb-2">🔗 輸入 Invite Link</h2>
+              <h2 className="text-[18px] font-semibold mb-1">🔗 輸入邀請碼</h2>
               <p className="text-[13px] text-[var(--text-secondary)] mb-4">
-                請輸入你收到的邀請鏈接 Token 或完整 URL
+                請輸入管理員俾你嘅 Invite Token
               </p>
               <input
                 type="text"
                 value={inviteToken}
                 onChange={(e) => setInviteToken(e.target.value)}
-                placeholder="例如: b86d0fbb26754355"
-                className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[15px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary-light)] mb-4"
+                placeholder="例如: a1b2c3d4e5f6g7h8"
+                className="w-full px-4 py-3.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[16px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)] mb-4"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-xl font-medium text-white text-[15px] transition-colors disabled:opacity-40"
+                className="w-full py-3.5 bg-[var(--primary)] hover:brightness-110 rounded-xl font-medium text-white text-[16px] transition-all disabled:opacity-40"
               >
                 {loading ? '驗證中...' : '下一步 →'}
               </button>
             </form>
           ) : (
-            <form onSubmit={handleRoomSubmit}>
-              <div className="flex items-center gap-2 mb-5">
-                <h2 className="text-[17px] font-semibold text-[var(--text)]">
-                  進入 Room {roomId}
-                </h2>
-                <span className="text-[12px] px-2.5 py-1 bg-[var(--primary-bg)] text-[var(--primary)] rounded-full font-medium">
-                  已驗證
-                </span>
-              </div>
+            <form onSubmit={handleJoinRoom}>
+              <h2 className="text-[18px] font-semibold mb-1">加入聊天室</h2>
+              <p className="text-[13px] text-[var(--text-secondary)] mb-4">
+                Room {roomId} · 已通過邀請驗證
+              </p>
 
               <div className="mb-4">
-                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">
+                <label className="block text-[14px] font-medium text-[var(--text-secondary)] mb-1.5">
                   你的名稱
                 </label>
                 <input
@@ -174,14 +157,14 @@ export default function HomePage() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="例如: 小明"
-                  className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[15px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary-light)]"
+                  className="w-full px-4 py-3.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[16px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-light)]"
                   maxLength={20}
                   autoFocus
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">
+              <div className="mb-5">
+                <label className="block text-[14px] font-medium text-[var(--text-secondary)] mb-1.5">
                   你的語言
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -190,9 +173,9 @@ export default function HomePage() {
                       key={lang.code}
                       type="button"
                       onClick={() => setLanguage(lang.code)}
-                      className={`px-2 py-2.5 rounded-xl text-[13px] font-medium border transition-colors ${
+                      className={`px-2 py-3 rounded-xl text-[14px] font-medium border transition-all ${
                         language === lang.code
-                          ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                          ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm'
                           : 'bg-white border-[var(--border)] text-[var(--text)] hover:border-[var(--primary)]'
                       }`}
                     >
@@ -202,36 +185,22 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="mb-5">
-                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">
-                  房間密碼
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="輸入房間密碼"
-                  className="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border)] rounded-xl text-[var(--text)] text-[15px] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary-light)]"
-                />
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-xl font-medium text-white text-[15px] transition-colors disabled:opacity-40"
+                className="w-full py-3.5 bg-[var(--primary)] hover:brightness-110 rounded-xl font-medium text-white text-[16px] transition-all disabled:opacity-40"
               >
-                {loading ? '驗證中...' : '進入聊天室 💬'}
+                {loading ? '加入中...' : '進入聊天室 💬'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep('invite')}
+                className="mt-3 w-full py-2 text-[13px] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+              >
+                ← 返回輸入邀請碼
               </button>
             </form>
-          )}
-
-          {step === 'room' && (
-            <button
-              onClick={() => setStep('invite')}
-              className="mt-3 w-full py-2 text-[13px] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-            >
-              ← 返回輸入 Invite Link
-            </button>
           )}
         </div>
 
