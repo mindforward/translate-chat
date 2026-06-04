@@ -127,10 +127,13 @@ export default function ChatRoom() {
   };
 
   const loadRoomInfo = async (rid: number) => {
+    // Only show sessions from the last 5 minutes to avoid stale dummy users
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: sessions } = await supabase
       .from('sessions')
       .select('nickname, language')
       .eq('room_id', rid)
+      .gte('created_at', fiveMinAgo)
       .order('created_at', { ascending: false });
     if (sessions) {
       const myNick = sessionStorage.getItem('nickname');
@@ -444,10 +447,10 @@ export default function ChatRoom() {
     </div>
       {showClearConfirm && typeof document !== 'undefined' && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowClearConfirm(false)}>
-          <div className="bg-white rounded-2xl p-8 w-[50%] max-w-sm min-w-[280px] shadow-2xl text-center"
-            style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
+          <div className="bg-white p-5 shadow-2xl text-center"
+            style={{ borderRadius: '20px', width: '50%', maxWidth: '380px', minWidth: '280px', padding: '24px', boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.15)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">🗑️</div>
             <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--text)' }}>{t(language, 'room.clear_title')}</h3>

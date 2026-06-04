@@ -122,8 +122,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center px-[50px] py-6 sm:px-[50px] sm:py-8" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-sm space-y-[10px]">
+        <div className="text-center">
           <img src="/logo-translate-chat.png" alt="Translate Chat" className="w-24 h-24 mx-auto mb-4" />
           <h1 className="text-[36px] sm:text-[40px] font-bold" style={{ color: '#1e375a' }}>Translate Chat</h1>
           <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>{t(getBrowserLang(), 'app.subtitle')}</p>
@@ -203,7 +203,7 @@ export default function HomePage() {
                   {LANGUAGES.map((lang) => (
                     <button key={lang.code} type="button"
                       onClick={() => setLanguage(lang.code)}
-                      className="font-medium transition-all m-[2.5px] text-sm sm:text-lg"
+                      className="font-medium transition-all m-[2.5px] text-sm sm:text-[20px]"
                       style={{
                         padding: '8px',
                         borderRadius: '8px',
