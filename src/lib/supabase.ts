@@ -1,26 +1,31 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-let _supabase: ReturnType<typeof createClient> | null = null
+let _supabase: SupabaseClient | null = null
 
-function getSupabase() {
+function getOrCreateClient(): SupabaseClient {
   if (!_supabase) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    _supabase = createClient(supabaseUrl, supabaseAnonKey)
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
   }
   return _supabase
 }
 
-export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+// Lazy singleton — only created when first accessed
+export const supabase = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    return getSupabase()[prop as keyof ReturnType<typeof createClient>]
+    return (getOrCreateClient() as any)[prop]
   },
 })
 
 // Service client for admin operations (server-side only)
 export function getServiceClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_KEY!
-  return createClient(supabaseUrl, serviceKey)
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceKey
+  )
 }
 
 export type Room = {
