@@ -124,7 +124,7 @@ export default function HomePage() {
     <div className="min-h-dvh flex items-center justify-center px-[50px] py-6 sm:px-[50px] sm:py-8" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <div className="text-6xl mb-4">💬</div>
+          <img src="/logo-translate-chat.svg" alt="Translate Chat" className="w-24 h-24 mx-auto mb-4" />
           <h1 className="text-[36px] sm:text-[40px] font-bold" style={{ color: '#1e375a' }}>Translate Chat</h1>
           <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>{t(getBrowserLang(), 'app.subtitle')}</p>
         </div>
@@ -147,10 +147,10 @@ export default function HomePage() {
                 value={inviteToken}
                 onChange={(e) => setInviteToken(e.target.value)}
                 placeholder={t(getBrowserLang(), 'login.placeholder')}
-                className="w-full rounded-lg placeholder: mb-4 transition-all focus:outline-none"
+                className="w-full rounded-lg placeholder: mb-4 transition-all focus:outline-none box-border"
                 style={{
                   fontSize: '20px',
-                  padding: '8px',
+                  padding: '10px 8px',
                   backgroundColor: 'var(--bg-input)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
@@ -161,6 +161,8 @@ export default function HomePage() {
                 style={{
                   fontSize: '20px',
                   padding: '8px',
+                  marginTop: '10px',
+                  marginBottom: '10px',
                   backgroundColor: 'var(--primary)',
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
                   borderRadius: '12px',
@@ -182,10 +184,10 @@ export default function HomePage() {
                 <input type="text" value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder={t(language, 'login.name_placeholder')}
-                  className="w-full rounded-lg placeholder: transition-all focus:outline-none text-center"
+                  className="w-full rounded-lg placeholder: transition-all focus:outline-none text-center box-border"
                   style={{
                     fontSize: '20px',
-                    padding: '8px',
+                    padding: '10px 8px',
                     backgroundColor: 'var(--bg-input)',
                     border: '2px solid #f59e0b',
                     color: 'var(--text)',
@@ -224,13 +226,12 @@ export default function HomePage() {
               </div>
 
               <button type="submit" disabled={loading}
-                className="w-full rounded-lg font-bold transition-all disabled:opacity-40"
+                className="w-full rounded-lg font-bold text-white transition-all disabled:opacity-40"
                 style={{
                   fontSize: '20px',
                   padding: '8px',
-                  marginTop: '15px',
-                  marginBottom: '15px',
-                  color: '#fff',
+                  marginTop: '10px',
+                  marginBottom: '10px',
                   backgroundColor: 'var(--primary)',
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
                   borderRadius: '12px',
