@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 
 const ROOMS = [
-  { id: 1, name: 'Room A' },
-  { id: 2, name: 'Room B' },
-  { id: 3, name: 'Room C' },
-  { id: 4, name: 'Room D' },
-  { id: 5, name: 'Room E' },
+  { id: 1, name: 'Room 1' },
+  { id: 2, name: 'Room 2' },
+  { id: 3, name: 'Room 3' },
+  { id: 4, name: 'Room 4' },
+  { id: 5, name: 'Room 5' },
 ];
 
 function CopyBtn({ text }: { text: string }) {
@@ -90,23 +90,23 @@ export default function AdminPage() {
               value={adminPw}
               onChange={(e) => setAdminPw(e.target.value)}
               placeholder="Admin Password"
-              className="w-full px-4 py-3.5 rounded-lg text-[16px] placeholder: mb-4 transition-all focus:outline-none"
+              className="w-full px-4 py-3.5 rounded-lg text-[16px] placeholder: mb-4 transition-all focus:outline-none box-border"
               style={{
                 backgroundColor: 'var(--bg-input)',
                 border: '1px solid var(--border)',
                 color: 'var(--text)',
+                padding: '12px 8px',
               }}
               autoFocus
             />
             <button
               type="submit"
-              className="w-full rounded-lg font-bold transition-all"
+              className="w-full rounded-lg font-bold text-white transition-all"
               style={{
                 fontSize: '20px',
                 padding: '8px',
-                marginTop: '15px',
-                marginBottom: '15px',
-                color: '#fff',
+                marginTop: '10px',
+                marginBottom: '10px',
                 backgroundColor: 'var(--primary)',
                 boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
               }}
@@ -219,6 +219,8 @@ export default function AdminPage() {
           style={{
             fontSize: '20px',
             padding: '8px',
+            marginTop: '10px',
+            marginBottom: '10px',
             backgroundColor: 'var(--primary)',
             boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
             borderRadius: '12px',

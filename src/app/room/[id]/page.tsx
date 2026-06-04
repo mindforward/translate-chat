@@ -413,10 +413,10 @@ export default function ChatRoom() {
             onKeyDown={handleKeyDown}
             placeholder={t(language, 'room.input_placeholder', getLanguageName(language))}
             rows={1}
-            className="flex-1 rounded-lg placeholder: resize-none max-h-[120px] transition-all focus:outline-none"
+            className="flex-1 rounded-lg placeholder: resize-none max-h-[120px] transition-all focus:outline-none box-border"
             style={{
               fontSize: '20px',
-              padding: '8px',
+              padding: '10px 8px',
               backgroundColor: 'var(--bg-input)',
               border: '1px solid var(--border)',
               color: 'var(--text)',
@@ -428,6 +428,8 @@ export default function ChatRoom() {
             style={{
               fontSize: '20px',
               padding: '8px 16px',
+              marginTop: '10px',
+              marginBottom: '10px',
               backgroundColor: 'var(--primary)',
               boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
               borderRadius: '12px',

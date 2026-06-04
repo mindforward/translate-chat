@@ -15,7 +15,8 @@ export default function RootLayout({
   return (
     <html lang="zh-HK">
       <head>
-        <link rel="icon" href="/icon-192.png" />
+        <link rel="icon" href="/logo-translate-chat.svg" />
+        <link rel="apple-touch-icon" href="/logo-translate-chat.svg" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
