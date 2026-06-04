@@ -447,7 +447,7 @@ export default function ChatRoom() {
     </div>
       {showClearConfirm && typeof document !== 'undefined' && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowClearConfirm(false)}>
           <div className="bg-white p-5 shadow-2xl text-center"
             style={{ borderRadius: '20px', width: '50%', maxWidth: '380px', minWidth: '280px', padding: '24px', boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.15)' }}
