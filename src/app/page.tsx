@@ -124,7 +124,7 @@ export default function HomePage() {
     <div className="min-h-dvh flex items-center justify-center px-[50px] py-6 sm:px-[50px] sm:py-8" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <img src="/logo-translate-chat.svg" alt="Translate Chat" className="w-24 h-24 mx-auto mb-4" />
+          <img src="/logo-translate-chat.png" alt="Translate Chat" className="w-32 h-32 mx-auto mb-4" />
           <h1 className="text-[36px] sm:text-[40px] font-bold" style={{ color: '#1e375a' }}>Translate Chat</h1>
           <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>{t(getBrowserLang(), 'app.subtitle')}</p>
         </div>

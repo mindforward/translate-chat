@@ -8,15 +8,15 @@
   "theme_color": "#00abe4",
   "icons": [
     {
-      "src": "/logo-translate-chat.svg",
+      "src": "/logo-translate-chat.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo-translate-chat.svg",
+      "src": "/logo-translate-chat.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
