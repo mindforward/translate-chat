@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const langMap: Record<string, string> = {
       yue: 'Cantonese (廣東話)',
       vi: 'Vietnamese (Tiếng Việt)',
-      zh: 'Traditional Chinese (繁體中文)',
+      zh: 'Traditional Chinese (正體中文, 繁體字, NOT Simplified Chinese 簡體字)',
       en: 'English',
       ja: 'Japanese (日本語)',
       ko: 'Korean (한국어)',

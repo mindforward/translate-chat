@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Message } from '@/lib/supabase';
 import { getLanguageName } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 type RealtimePayload = {
   new: Message;
@@ -29,6 +30,38 @@ export default function ChatRoom() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [speakingId, setSpeakingId] = useState<number | null>(null);
 
+  /** Speak text using browser TTS. For Cantonese (yue), do NOT assign a voice —
+   *  let the browser pick the default. On Android with zh-HK voices this gives
+   *  proper Cantonese; on desktop it falls back to the system Chinese voice. */
+  const speakText = useCallback((text: string, langCode: string, msgId: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    const langMap: Record<string, string> = {
+      yue: 'zh-HK',
+      zh: 'zh-CN',
+      en: 'en-US',
+      ja: 'ja-JP',
+      ko: 'ko-KR',
+      vi: 'vi-VN',
+    };
+    utterance.lang = langMap[langCode] || 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    setSpeakingId(msgId);
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  // Initialize room
   useEffect(() => {
     const st = sessionStorage.getItem('session_token');
     const nn = sessionStorage.getItem('nickname');
@@ -47,6 +80,15 @@ export default function ChatRoom() {
     loadMessages(roomId);
     loadRoomInfo(roomId);
 
+    // Clean up session when user leaves
+    const handleUnload = () => {
+      navigator.sendBeacon('/api/clear-session', JSON.stringify({ sessionToken: st }));
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    // Refresh online users periodically
+    const roomInfoInterval = setInterval(() => loadRoomInfo(roomId), 30000);
+
     const channel = supabase
       .channel(`room-${roomId}`)
       .on(
@@ -63,7 +105,11 @@ export default function ChatRoom() {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(roomInfoInterval);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
   }, [roomId, router]);
 
   useEffect(() => {
@@ -84,10 +130,18 @@ export default function ChatRoom() {
     const { data: sessions } = await supabase
       .from('sessions')
       .select('nickname, language')
-      .eq('room_id', rid);
+      .eq('room_id', rid)
+      .order('created_at', { ascending: false });
     if (sessions) {
       const myNick = sessionStorage.getItem('nickname');
-      setOtherNicknames(sessions.filter((s) => s.nickname !== myNick).map((s) => s.nickname));
+      // Deduplicate by nickname (keep most recent entry per nickname)
+      const seen = new Set<string>();
+      const uniqueSessions = sessions.filter((s) => {
+        if (seen.has(s.nickname)) return false;
+        seen.add(s.nickname);
+        return true;
+      });
+      setOtherNicknames(uniqueSessions.filter((s) => s.nickname !== myNick).map((s) => s.nickname));
     }
   };
 
@@ -101,28 +155,60 @@ export default function ChatRoom() {
         .select('language')
         .eq('room_id', roomId);
 
-      const otherLangs = [...new Set(
-        (sessions || []).map((s) => s.language).filter((l) => l !== language)
+      const allLangs = [...new Set(
+        (sessions || []).map((s) => s.language)
       )];
 
-      let translatedText = null;
-      let translatedLang = null;
+      const otherLangs = allLangs.filter((l) => l !== language);
+
+      let translatedText: string | null = null;
+      let translatedLang: string | null = null;
 
       if (otherLangs.length > 0) {
-        const targetLang = otherLangs[0];
-        const transRes = await fetch('/api/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: inputText.trim(),
-            sourceLang: language,
-            targetLang,
-          }),
-        });
-        const transData = await transRes.json();
-        if (transRes.ok) {
-          translatedText = transData.translated;
-          translatedLang = targetLang;
+        // Translate to ALL other languages in parallel, store as JSON map
+        const translationMap: Record<string, string> = {};
+
+        if (otherLangs.length === 1) {
+          // Single target language — store directly (backward compatible)
+          const targetLang = otherLangs[0];
+          const transRes = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: inputText.trim(),
+              sourceLang: language,
+              targetLang,
+            }),
+          });
+          const transData = await transRes.json();
+          if (transRes.ok) {
+            translatedText = transData.translated;
+            translatedLang = targetLang;
+          }
+        } else {
+          // Multiple target languages — translate all in parallel
+          const results = await Promise.allSettled(
+            otherLangs.map((tgt) =>
+              fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  text: inputText.trim(),
+                  sourceLang: language,
+                  targetLang: tgt,
+                }),
+              }).then((r) => r.json())
+            )
+          );
+          results.forEach((result, idx) => {
+            if (result.status === 'fulfilled' && result.value.translated) {
+              translationMap[otherLangs[idx]] = result.value.translated;
+            }
+          });
+          if (Object.keys(translationMap).length > 0) {
+            translatedText = JSON.stringify(translationMap);
+            translatedLang = 'multi';
+          }
         }
       }
 
@@ -161,7 +247,15 @@ export default function ChatRoom() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  const displayText = (msg: Message) => {
+  const displayText = (msg: Message): string => {
+    // Multi-translation: JSON map stored in translated_text
+    if (msg.translated_lang === 'multi' && msg.translated_text) {
+      try {
+        const map: Record<string, string> = JSON.parse(msg.translated_text);
+        if (map[language]) return map[language];
+      } catch { /* fall through */ }
+    }
+    // Single translation: direct match
     if (msg.original_lang !== language && msg.translated_lang === language) {
       return msg.translated_text || msg.original_text;
     }
@@ -172,39 +266,19 @@ export default function ChatRoom() {
 
   /** Determine which language to speak based on what text is shown */
   const speechLangFor = useCallback((msg: Message): string => {
+    // Multi-translation: if user has a translation, speak in their language
+    if (msg.translated_lang === 'multi' && msg.translated_text) {
+      try {
+        const map: Record<string, string> = JSON.parse(msg.translated_text);
+        if (map[language]) return language;
+      } catch { /* fall through */ }
+    }
+    // Single translation
     if (msg.original_lang !== language && msg.translated_lang === language) {
       return language; // showing translated text → speak in user's language
     }
     return msg.original_lang; // showing original text → speak in original language
   }, [language]);
-
-  const speakText = useCallback((text: string, langCode: string, msgId: number) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    const langMap: Record<string, string> = {
-      yue: 'zh-HK',
-      zh: 'zh-CN',
-      en: 'en-US',
-      ja: 'ja-JP',
-      ko: 'ko-KR',
-      vi: 'vi-VN',
-    };
-    utterance.lang = langMap[langCode] || 'en-US';
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    setSpeakingId(msgId);
-
-    utterance.onend = () => setSpeakingId(null);
-    utterance.onerror = () => setSpeakingId(null);
-
-    window.speechSynthesis.speak(utterance);
-  }, []);
 
   return (
     <>
@@ -220,7 +294,7 @@ export default function ChatRoom() {
           </button>
           <div className="ml-[10px] min-w-0">
             <h1 className="font-bold truncate" style={{ fontSize: '18px', color: 'var(--text)' }}>
-              聊天室 {roomId}
+              {t(language, 'room.title', String(roomId))}
             </h1>
           </div>
         </div>
@@ -235,7 +309,7 @@ export default function ChatRoom() {
           <button onClick={() => setShowClearConfirm(true)}
             className="ml-[10px] text-xs px-3 py-1.5 rounded-full font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
             style={{ color: 'var(--text-muted)' }}>
-            清除
+            {t(language, 'room.clear')}
           </button>
         </div>
       </header>
@@ -244,8 +318,8 @@ export default function ChatRoom() {
       <div className="px-4 py-2 text-xs border-b text-center"
         style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
         {otherNicknames.length > 0
-          ? `在線：${[nickname, ...otherNicknames].join('、')}`
-          : '等待其他人加入...'}
+          ? t(language, 'room.online') + [nickname, ...otherNicknames].join('、')
+          : t(language, 'room.waiting')}
       </div>
 
       {/* Messages */}
@@ -254,8 +328,8 @@ export default function ChatRoom() {
         {messages.length === 0 && (
           <div className="text-center mt-24">
             <p className="text-6xl mb-4">💬</p>
-            <p className="font-semibold text-[18px]" style={{ color: 'var(--text)' }}>未有對話記錄</p>
-            <p className="text-[15px] mt-2" style={{ color: 'var(--text-muted)' }}>發送第一條訊息開始對話吧！</p>
+            <p className="font-semibold text-[18px]" style={{ color: 'var(--text)' }}>{t(language, 'room.no_messages')}</p>
+            <p className="text-[15px] mt-2" style={{ color: 'var(--text-muted)' }}>{t(language, 'room.start_chat')}</p>
           </div>
         )}
         {messages.map((msg) => {
@@ -283,9 +357,14 @@ export default function ChatRoom() {
                   <p className="text-sm font-semibold mb-1"
                     style={{ color: 'var(--text-muted)' }}>
                     {msg.nickname}
-                    {msg.translated_lang && msg.translated_lang !== msg.original_lang && (
+                    {msg.translated_lang && msg.translated_lang !== msg.original_lang && msg.translated_lang !== 'multi' && (
                       <span className="ml-1.5 opacity-60 text-xs">
                         {getLanguageName(msg.translated_lang)}
+                      </span>
+                    )}
+                    {msg.translated_lang === 'multi' && (
+                      <span className="ml-1.5 opacity-60 text-xs">
+                        🌐
                       </span>
                     )}
                   </p>
@@ -303,7 +382,7 @@ export default function ChatRoom() {
                         color: '#1e375a',
                         opacity: isSpeaking ? 1 : undefined,
                       }}
-                      title="發音"
+                      title={t(language, 'room.speak')}
                     >
                       {isSpeaking ? '🔊' : '🔈'}
                     </button>
@@ -332,7 +411,7 @@ export default function ChatRoom() {
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
             }}
             onKeyDown={handleKeyDown}
-            placeholder={`輸入訊息 (${getLanguageName(language)})...`}
+            placeholder={t(language, 'room.input_placeholder', getLanguageName(language))}
             rows={1}
             className="flex-1 rounded-lg placeholder: resize-none max-h-[120px] transition-all focus:outline-none"
             style={{
@@ -353,11 +432,11 @@ export default function ChatRoom() {
               boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
               borderRadius: '12px',
             }}>
-            {sending ? '...' : '發送 →'}
+            {sending ? t(language, 'room.sending') : t(language, 'room.send')}
           </button>
         </div>
         <p className="mt-1.5 text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-          ⏎ Enter 發送 · ⇧ Shift+Enter 換行
+          {t(language, 'room.send_hint')}
         </p>
       </div>
     </div>
@@ -369,18 +448,18 @@ export default function ChatRoom() {
             style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">🗑️</div>
-            <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--text)' }}>清除對話記錄？</h3>
-            <p className="text-[15px] mb-6" style={{ color: 'var(--text-secondary)' }}>這個操作無法復原。</p>
+            <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--text)' }}>{t(language, 'room.clear_title')}</h3>
+            <p className="text-[15px] mb-6" style={{ color: 'var(--text-secondary)' }}>{t(language, 'room.clear_desc')}</p>
             <div className="flex gap-3">
               <button onClick={() => setShowClearConfirm(false)}
                 className="flex-1 rounded-xl font-semibold transition-all hover:brightness-95"
                 style={{ fontSize: '18px', padding: '15px', backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-                取消
+                {t(language, 'room.cancel')}
               </button>
               <button onClick={clearMessages}
                 className="flex-1 rounded-xl font-bold text-white transition-all hover:brightness-110"
                 style={{ fontSize: '18px', padding: '15px', backgroundColor: '#e74c3c' }}>
-                確認清除
+                {t(language, 'room.confirm_clear')}
               </button>
             </div>
           </div>

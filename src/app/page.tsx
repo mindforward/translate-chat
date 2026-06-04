@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { generateSessionToken } from '@/lib/utils';
+import { t, getBrowserLang } from '@/lib/i18n';
 
 const LANGUAGES = [
   { code: 'yue', name: '廣東話', flag: '🇭🇰' },
   { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'zh', name: '普通話', flag: '🇨🇳' },
+  { code: 'zh', name: '普通話 (简体)', flag: '🇨🇳' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
   { code: 'ko', name: '한국어', flag: '🇰🇷' },
@@ -44,7 +45,7 @@ export default function HomePage() {
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteToken.trim()) {
-      setError('請輸入 Invite Link Token');
+      setError(t(getBrowserLang(), 'login.enter_token'));
       return;
     }
     setLoading(true);
@@ -58,32 +59,39 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Invite link 無效');
+        setError(t(getBrowserLang(), 'login.invalid_token'));
         setLoading(false);
         return;
       }
       setRoomId(data.room_id);
       setStep('profile');
     } catch {
-      setError('無法驗證 Invite Link');
+      setError(t(getBrowserLang(), 'login.verify_error'));
     }
     setLoading(false);
   };
 
   const handleJoinRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Auto-generate name if empty
-    const finalName = nickname.trim() || generateDefaultName();
-    if (!nickname.trim()) {
-      setNickname(finalName);
-    }
-
     setLoading(true);
     setError('');
 
     try {
+      // Auto-generate name if empty
+      const finalName = nickname.trim() || generateDefaultName();
+      if (!nickname.trim()) {
+        setNickname(finalName);
+      }
+
       const sessionToken = generateSessionToken();
+
+      // Clean up old sessions with the same nickname in this room
+      await supabase
+        .from('sessions')
+        .delete()
+        .eq('room_id', roomId)
+        .eq('nickname', finalName);
+
       const { error: sessionError } = await supabase
         .from('sessions')
         .insert({
@@ -94,7 +102,7 @@ export default function HomePage() {
         });
 
       if (sessionError) {
-        setError('加入聊天室失敗');
+        setError(t(language, 'login.join_error'));
         setLoading(false);
         return;
       }
@@ -106,7 +114,7 @@ export default function HomePage() {
 
       router.push(`/room/${roomId}`);
     } catch {
-      setError('連線錯誤');
+      setError(t(language, 'login.connection_error'));
     }
     setLoading(false);
   };
@@ -117,7 +125,7 @@ export default function HomePage() {
         <div className="text-center mb-10">
           <div className="text-6xl mb-4">💬</div>
           <h1 className="text-[36px] sm:text-[40px] font-bold" style={{ color: '#1e375a' }}>Translate Chat</h1>
-          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>即時翻譯對話</p>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>{t(getBrowserLang(), 'app.subtitle')}</p>
         </div>
 
         <div className="rounded-lg p-6 sm:p-8 bg-white" style={{ boxShadow: '0 30px 60px 0 rgba(170, 195, 225, 0.3)', border: '1px solid var(--border)' }}>
@@ -129,15 +137,15 @@ export default function HomePage() {
 
           {step === 'invite' ? (
             <form onSubmit={handleInviteSubmit}>
-              <h2 className="text-[20px] font-bold mb-1" style={{ color: '#1e375a' }}>🔗 輸入邀請碼</h2>
+              <h2 className="text-[20px] font-bold mb-1" style={{ color: '#1e375a' }}>{t(getBrowserLang(), 'login.title')}</h2>
               <p className="text-sm mb-5" style={{ color: 'var(--text-secondary)' }}>
-                請輸入管理員俾你嘅 Invite Token
+                {t(getBrowserLang(), 'login.subtitle')}
               </p>
               <input
                 type="text"
                 value={inviteToken}
                 onChange={(e) => setInviteToken(e.target.value)}
-                placeholder="例如: a1b2c3d4e5f6g7h8"
+                placeholder={t(getBrowserLang(), 'login.placeholder')}
                 className="w-full rounded-lg placeholder: mb-4 transition-all focus:outline-none"
                 style={{
                   fontSize: '20px',
@@ -156,23 +164,23 @@ export default function HomePage() {
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
                   borderRadius: '12px',
                 }}>
-                {loading ? '驗證中...' : '下一步 →'}
+                {loading ? t(getBrowserLang(), 'login.verifying') : t(getBrowserLang(), 'login.next')}
               </button>
             </form>
           ) : (
             <form onSubmit={handleJoinRoom}>
-              <h2 className="text-[20px] font-bold mb-1" style={{ color: '#1e375a' }}>加入聊天室</h2>
+              <h2 className="text-[20px] font-bold mb-1" style={{ color: '#1e375a' }}>{t(language, 'login.join_room')}</h2>
               <p className="text-sm mb-5" style={{ color: 'var(--text-secondary)' }}>
-                Room {roomId} · 已通過邀請驗證
+                {t(language, 'login.room_verified', String(roomId))}
               </p>
 
               <div className="mb-5">
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  你的名稱（留空自動生成）
+                  {t(language, 'login.name_label')}
                 </label>
                 <input type="text" value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  placeholder="留空將自動分配名稱"
+                  placeholder={t(language, 'login.name_placeholder')}
                   className="w-full rounded-lg placeholder: transition-all focus:outline-none text-center"
                   style={{
                     fontSize: '20px',
@@ -186,15 +194,14 @@ export default function HomePage() {
 
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  你的語言
+                  {t(language, 'login.lang_label')}
                 </label>
                 <div className="grid grid-cols-3 gap-[5px]">
                   {LANGUAGES.map((lang) => (
                     <button key={lang.code} type="button"
                       onClick={() => setLanguage(lang.code)}
-                      className="font-medium transition-all m-[2.5px]"
+                      className="font-medium transition-all m-[2.5px] text-sm sm:text-lg"
                       style={{
-                        fontSize: '20px',
                         padding: '8px',
                         borderRadius: '8px',
                         ...(language === lang.code ? {
@@ -227,13 +234,13 @@ export default function HomePage() {
                   boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
                   borderRadius: '12px',
                 }}>
-                {loading ? '加入中...' : '進入聊天室 💬'}
+                {loading ? t(language, 'login.joining') : t(language, 'login.enter_chat')}
               </button>
 
               <button type="button" onClick={() => setStep('invite')}
                 className="mt-3 w-full py-2 text-sm transition-colors"
                 style={{ color: 'var(--text-muted)' }}>
-                ← 返回輸入邀請碼
+                {t(language, 'login.back')}
               </button>
             </form>
           )}
