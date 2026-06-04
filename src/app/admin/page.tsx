@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { APP_VERSION } from '@/lib/version';
 
 const ROOMS = [
@@ -174,6 +175,7 @@ export default function AdminPage() {
   }
 
   return (
+    <>
     <div className="min-h-dvh px-[50px] py-5 sm:px-[50px] sm:py-6 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -286,13 +288,12 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* Force Clear Room */}
+      {/* Clear Messages — Danger Zone */}
       <div className="bg-white rounded-lg p-5" style={{ boxShadow: '0 2px 8px 0 rgba(35, 100, 210, 0.08)', border: '1px solid #f5c6cb' }}>
         <h2 className="font-semibold text-[16px] mb-1" style={{ color: '#e74c3c' }}>🗑️ Force 清空對話</h2>
         <p className="text-xs mb-4" style={{ color: 'var(--text-secondary)' }}>
           清空所選房間嘅所有對話記錄，此操作無法復原
         </p>
-
         <button
           onClick={() => setShowClearConfirm(true)}
           className="w-full rounded-lg font-bold text-white transition-all"
@@ -313,9 +314,10 @@ export default function AdminPage() {
       <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
         Translate Chat v{APP_VERSION}
       </p>
+    </div>
 
-      {/* Clear Room Confirm Dialog */}
-      {showClearConfirm && (
+      {/* Clear Room Confirm Dialog — createPortal to body so overlay covers everything */}
+      {showClearConfirm && typeof document !== 'undefined' && createPortal(
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowClearConfirm(false)}>
@@ -340,8 +342,9 @@ export default function AdminPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
