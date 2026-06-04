@@ -319,8 +319,8 @@ export default function AdminPage() {
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setShowClearConfirm(false)}>
-          <div className="bg-white rounded-2xl p-8 w-[50%] max-w-sm min-w-[280px] shadow-2xl text-center"
-            style={{ boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.2)' }}
+          <div className="bg-white shadow-2xl text-center"
+            style={{ borderRadius: '20px', width: '50%', maxWidth: '380px', minWidth: '280px', padding: '24px', boxShadow: '0 30px 80px 0 rgba(0, 0, 0, 0.15)' }}
             onClick={(e) => e.stopPropagation()}>
             <div className="text-5xl mb-4">⚠️</div>
             <h3 className="text-[20px] font-bold mb-2" style={{ color: '#e74c3c' }}>確認清空 Room {clearRoomId}？</h3>
