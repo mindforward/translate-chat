@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { generateSessionToken } from '@/lib/utils';
 import { t, getBrowserLang } from '@/lib/i18n';
+import { APP_VERSION } from '@/lib/version';
 
 const LANGUAGES = [
   { code: 'yue', name: '廣東話', flag: '🇭🇰' },
@@ -246,7 +247,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>Translate Chat v{process.env.NEXT_PUBLIC_APP_VERSION}</p>
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>Translate Chat v{APP_VERSION}</p>
       </div>
     </div>
   );
