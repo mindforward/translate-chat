@@ -246,7 +246,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>Translate Chat v1.0</p>
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>Translate Chat v{process.env.NEXT_PUBLIC_APP_VERSION}</p>
       </div>
     </div>
   );
