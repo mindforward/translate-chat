@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import QRCode from 'qrcode';
 import { APP_VERSION } from '@/lib/version';
 
 const ROOMS = [
@@ -44,6 +45,7 @@ export default function AdminPage() {
   const [expiresAt, setExpiresAt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
 
   // Clear room state
   const [clearRoomId, setClearRoomId] = useState(1);
@@ -102,6 +104,19 @@ export default function AdminPage() {
     }
     setLoading(false);
   };
+
+  // Generate QR code when invite URL changes
+  useEffect(() => {
+    if (inviteUrl) {
+      QRCode.toDataURL(inviteUrl, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#1e375a', light: '#ffffff' },
+      }).then(setQrDataUrl);
+    } else {
+      setQrDataUrl('');
+    }
+  }, [inviteUrl]);
 
   const handleClearRoom = async () => {
     setClearing(true);
@@ -280,6 +295,12 @@ export default function AdminPage() {
               </div>
               <CopyBtn text={inviteUrl} />
             </div>
+            {qrDataUrl && (
+              <div className="flex justify-center py-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={qrDataUrl} alt="QR Code" style={{ width: 180, height: 180, borderRadius: 12 }} />
+              </div>
+            )}
             <div className="p-3.5 rounded-lg" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border)' }}>
               <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>⏰ 到期</p>
               <p className="text-sm" style={{ color: 'var(--text)' }}>{expiresAt}</p>
