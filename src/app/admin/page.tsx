@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import QRCode from 'qrcode';
-import { APP_VERSION } from '@/lib/version';
 
 const ROOMS = [
   { id: 1, name: 'Room 1' },
@@ -331,10 +330,6 @@ export default function AdminPage() {
           清空 Room {clearRoomId} 對話
         </button>
       </div>
-
-      <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
-        Translate Chat v{APP_VERSION}
-      </p>
     </div>
 
       {/* Clear Room Confirm Dialog — createPortal to body so overlay covers everything */}
