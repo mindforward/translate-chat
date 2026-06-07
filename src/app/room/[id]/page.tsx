@@ -265,7 +265,7 @@ export default function ChatRoom() {
     return msg.original_text;
   };
 
-  const isMyMessage = (msg: Message) => msg.nickname === nickname;
+  const isMyMessage = (msg: Message) => msg.session_id === sessionToken;
 
   /** Determine which language to speak based on what text is shown */
   const speechLangFor = useCallback((msg: Message): string => {
