@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { APP_VERSION } from "@/lib/version";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,7 +21,12 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen flex flex-col">
+        {children}
+        <footer className="text-center text-gray-400 text-xs py-4 mt-auto">
+          Translate Chat {APP_VERSION} &nbsp;·&nbsp; Powered by DeepSeek
+        </footer>
+      </body>
     </html>
   );
 }
