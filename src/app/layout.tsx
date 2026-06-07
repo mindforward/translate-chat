@@ -24,7 +24,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col">
         {children}
         <footer className="text-center text-gray-400 text-xs py-4 mt-auto">
-          Translate Chat {APP_VERSION} &nbsp;·&nbsp; Powered by DeepSeek
+          Translate Chat {APP_VERSION} &nbsp;·&nbsp; Powered by 如意小馬
         </footer>
       </body>
     </html>
