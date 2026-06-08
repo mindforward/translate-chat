@@ -190,7 +190,7 @@ export default function AdminPage() {
 
   return (
     <>
-    <div className="min-h-dvh px-[25px] py-5 sm:px-[50px] sm:py-6 mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-dvh px-[25px] py-5" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[22px] font-bold" style={{ color: '#1e375a' }}>⚙️ Admin</h1>
