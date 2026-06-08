@@ -190,7 +190,7 @@ export default function AdminPage() {
 
   return (
     <>
-    <div className="min-h-dvh px-[50px] py-5 sm:px-[50px] sm:py-6 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-dvh px-[25px] py-5 sm:px-[50px] sm:py-6 sm:max-w-sm mx-auto" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[22px] font-bold" style={{ color: '#1e375a' }}>⚙️ Admin</h1>
@@ -271,6 +271,7 @@ export default function AdminPage() {
             marginTop: '10px',
             marginBottom: '10px',
             backgroundColor: 'var(--primary)',
+            color: '#fff',
             boxShadow: '0 8px 20px 0 rgba(0, 171, 228, 0.25)',
             borderRadius: '12px',
           }}
