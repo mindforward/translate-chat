@@ -3,10 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { generateSessionToken } from '@/lib/utils';
+import { generateSessionToken, getLanguageName } from '@/lib/utils';
 import { t, getBrowserLang } from '@/lib/i18n';
-import { APP_VERSION } from '@/lib/version';
-
 const LANGUAGES = [
   { code: 'yue', name: '廣東話', flag: '🇭🇰' },
   { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
@@ -247,8 +245,6 @@ export default function HomePage() {
             </form>
           )}
         </div>
-
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>Translate Chat v{APP_VERSION}</p>
       </div>
     </div>
   );
