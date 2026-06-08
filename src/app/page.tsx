@@ -201,7 +201,7 @@ export default function HomePage() {
                   {LANGUAGES.map((lang) => (
                     <button key={lang.code} type="button"
                       onClick={() => setLanguage(lang.code)}
-                      className="font-medium transition-all m-[2.5px] text-sm sm:text-[20px]"
+                      className="font-medium transition-all m-[2.5px] text-[1.2rem]"
                       style={{
                         padding: '8px',
                         borderRadius: '8px',
