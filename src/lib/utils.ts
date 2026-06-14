@@ -43,5 +43,13 @@ export function getSystemPrompt(sourceLang: string, targetLang: string): string 
   const src = langMap[sourceLang] || sourceLang
   const tgt = langMap[targetLang] || targetLang
 
-  return `You are a translator. Translate the following text from ${src} to ${tgt}. Only output the translated text, nothing else. No explanations, no quotes, no notes.`
+  return `You are a professional translator. Translate the following text from ${src} to ${tgt}.
+
+CRITICAL RULES:
+1. Output ONLY the translated text in ${tgt}.
+2. NEVER output in Chinese (Traditional or Simplified).
+3. NEVER output in English.
+4. NEVER add explanations, quotes, notes, or the original text.
+5. If you cannot translate, output the best approximation.
+6. Respond with nothing but the translation.`
 }
